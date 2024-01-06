@@ -15,9 +15,11 @@ public abstract class GameObject extends JComponent {
     public String cur_tile;
     private static double move_spd;
     public double xPos = 1100;
-    public double yPos = 10;
-    public int xHitbox = 57; //distance to top right corner of character
-    public int yHitbox = 86; //distance to bottom left corner of character
+    public double yPos = 300;
+    private int xScale = 57;//distance to top right corner of character - temp!
+    private int yScale = 86;//distance to bottom left corner of character - temp!
+    public int xHitbox = 57; //temp!
+    public int yHitbox = 86; //temp!
     private double levelWidth = Setup.colMax * 100;//the 100 is scale of tiles, temp
     private double levelHeight = Setup.rowMax * 100;//the 100 is scale of tiles, temp
     public int scrX = window_width/2 - xHitbox/2;
@@ -102,25 +104,25 @@ public abstract class GameObject extends JComponent {
 
     }
 
-    public int getTile(){
-        int x = 0;
-        int y = 0;
-
-
-        if (cur_direction == Direction.LEFT || cur_direction == Direction.UP) {
-            x = (int) xPos / 100;
-            y = (int) yPos / 100; //100 temp for scaling
-        } if (cur_direction == Direction.DOWN){
-            x = (int) xPos / 100;
-            y = (int) (yPos + yHitbox) / 100;
-        } if (cur_direction == Direction.RIGHT){
-            x = (int) (xPos + xHitbox) / 100;
-            y = (int) yPos / 100;
-        }
-//        System.out.println("[" + x + "," + y + "]");
-        return Integer.parseInt(Setup.textureData[x][y]);
-        //should create a tile collision checker so we dont have to manually input which tiles are solid
-    }
+//    public String getTile(){
+//        int x = 0;
+//        int y = 0;
+//
+//
+//        if (cur_direction == Direction.LEFT || cur_direction == Direction.UP) {
+//            x = (int) xPos / 100;
+//            y = (int) yPos / 100; //100 temp for scaling
+//        } if (cur_direction == Direction.DOWN){
+//            x = (int) xPos / 100;
+//            y = (int) (yPos + yHitbox) / 100;
+//        } if (cur_direction == Direction.RIGHT){
+//            x = (int) (xPos + xHitbox) / 100;
+//            y = (int) yPos / 100;
+//        }
+////        System.out.println("[" + x + "," + y + "]");
+//        return Setup.textureData[x][y];
+//        //should create a tile collision checker so we dont have to manually input which tiles are solid
+//    }
 
     public boolean collisionCheck(){
         int toTouch;
@@ -159,7 +161,6 @@ public abstract class GameObject extends JComponent {
         if(xPos - move_spd > 0 && collisionCheck()){
             xPos -= move_spd;
         }
-
     }
 
     /**
@@ -276,7 +277,7 @@ public abstract class GameObject extends JComponent {
     }
 
     public void drawPlayer(Graphics2D gr){ //to be draw camera
-        gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xHitbox, yHitbox, transparent, null);
+        gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, transparent, null);
     }
 
     /**

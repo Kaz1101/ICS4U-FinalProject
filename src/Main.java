@@ -14,7 +14,7 @@ public class Main {
     public int ScaleFactor = (int)Math.sqrt(x*x + y*y) / 10;
 
     public static void main(String[] args) throws IOException {
-        Setup setup = new Setup(new File("data/map/level_test"), "data/assets/");
+        Setup setup = new Setup(new File("data/map/testmap3"), "data/assets/");
         setup.load();
         GameObject.getWindowSize(x, y);
         new Title();

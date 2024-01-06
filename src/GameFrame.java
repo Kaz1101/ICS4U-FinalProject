@@ -27,7 +27,7 @@ public class GameFrame extends JPanel{
         public void actionPerformed(ActionEvent e) {
 
             //for collision: keep track of what tile the character is on, only call movement if character is not on said tile?
-            System.out.println(testSubject1.getTile());
+//            System.out.println(testSubject1.getTile());
 //              testSubject1.collisionCheck();
                 if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
                     testSubject1.cur_action = GameObject.Action.IDLE;

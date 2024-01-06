@@ -12,15 +12,15 @@ public class Setup extends LoadedSprites {
     }
 
     public String textureDir;
-    private File data;
-    private File loose;
+    private final File data;
+    private final File loose;
     public static String[][] textureData;
     public static boolean[][] collisionData;
 
 
     //temp
-    private int scaleX = 100;
-    private int scaleY = 100;
+    private final int scaleX = 100;
+    private final int scaleY = 100;
 
     public void loadMapTextures() throws IOException {
         ArrayList<String[]> textData = new ArrayList<>();
@@ -40,15 +40,23 @@ public class Setup extends LoadedSprites {
         }
         colMax = textureData[0].length;
         rowMax = textureData.length;
-        mapCollision();
+        collisionTiles();
     }
 
-    private void mapCollision(){
+    public void collisionTiles() throws IOException{
+        BufferedReader read = new BufferedReader(new FileReader("data/map/collisionTiles.csv"));
+         mapCollision(read.readLine().split(","));
+    }
+
+    private void mapCollision(String[] collision){
         collisionData = new boolean[textureData.length][textureData[0].length];
         for (int i = 0; i < textureData.length; i++){
             for (int j = 0; j < textureData[0].length; j++){
-                if (Integer.parseInt(textureData[i][j]) == 1){
-                    collisionData[i][j] = true;
+                for (String s : collision) {
+                    if (textureData[i][j].equals(s)) {
+                        collisionData[i][j] = true;
+                        break;
+                    }
                 }
             }
         }
