@@ -15,6 +15,8 @@ public class Setup extends LoadedSprites {
     private File data;
     private File loose;
     public static String[][] textureData;
+    public static boolean[][] collisionData;
+
 
     //temp
     private int scaleX = 100;
@@ -38,6 +40,18 @@ public class Setup extends LoadedSprites {
         }
         colMax = textureData[0].length;
         rowMax = textureData.length;
+        mapCollision();
+    }
+
+    private void mapCollision(){
+        collisionData = new boolean[textureData.length][textureData[0].length];
+        for (int i = 0; i < textureData.length; i++){
+            for (int j = 0; j < textureData[0].length; j++){
+                if (Integer.parseInt(textureData[i][j]) == 1){
+                    collisionData[i][j] = true;
+                }
+            }
+        }
     }
 
     public static int colMax;

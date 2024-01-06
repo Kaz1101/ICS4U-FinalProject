@@ -14,7 +14,7 @@ public abstract class GameObject extends JComponent {
     public Action cur_action = Action.IDLE;
     public String cur_tile;
     private static double move_spd;
-    public double xPos = 1200;
+    public double xPos = 1100;
     public double yPos = 10;
     public int xHitbox = 57; //distance to top right corner of character
     public int yHitbox = 86; //distance to bottom left corner of character
@@ -129,23 +129,23 @@ public abstract class GameObject extends JComponent {
         switch (cur_direction){
             case UP -> {
                 toTouch = (int) (yPos - move_spd) / 100;
-                return Integer.parseInt(Setup.textureData[toTouch][(int) xPos / 100]) != 1 &&
-                        Integer.parseInt(Setup.textureData[toTouch][(int) (xPos + xHitbox) / 100]) != 1;
+                return !Setup.collisionData[toTouch][(int) xPos / 100] &&
+                        !Setup.collisionData[toTouch][(int) (xPos + xHitbox) / 100];
             } case LEFT -> {
                 toTouch = (int) (xPos - move_spd) / 100;
-                return Integer.parseInt(Setup.textureData[(int) yPos / 100][toTouch]) != 1 &&
-                        Integer.parseInt(Setup.textureData[(int) (yPos + yHitbox) / 100][toTouch]) != 1;
+                return !Setup.collisionData[(int) yPos / 100][toTouch] &&
+                        !Setup.collisionData[(int) (yPos + yHitbox) / 100][toTouch];
             } case DOWN -> {
                 toTouch = (int) (yPos + yHitbox + move_spd) / 100;
-                return Integer.parseInt(Setup.textureData[toTouch][(int) xPos / 100]) != 1 &&
-                        Integer.parseInt(Setup.textureData[toTouch][(int) (xPos + xHitbox) / 100]) != 1;
+                return !Setup.collisionData[toTouch][(int) xPos / 100] &&
+                        !Setup.collisionData[toTouch][(int) (xPos + xHitbox) / 100];
             } case RIGHT -> {
                 toTouch = (int) (xPos + xHitbox + move_spd) / 100;
-                return Integer.parseInt(Setup.textureData[(int) yPos / 100][toTouch]) != 1 &&
-                        Integer.parseInt(Setup.textureData[(int) (yPos + yHitbox) / 100][toTouch]) != 1;
+                return !Setup.collisionData[(int) yPos / 100][toTouch] &&
+                        !Setup.collisionData[(int) (yPos + yHitbox) / 100][toTouch];
             }
         }
-        return true;
+        return false;
     }
 
 
