@@ -25,16 +25,16 @@ public class KeyInput implements KeyListener {
                         up = true;
                         break;
                     case KeyEvent.VK_A:
-                        System.out.println("left");
+//                        System.out.println("left");
                         left = true;
 
                         break;
                     case KeyEvent.VK_S:
-                        System.out.println("down");
+//                        System.out.println("down");
                         down = true;
                         break;
                     case KeyEvent.VK_D:
-                        System.out.println("right");
+//                        System.out.println("right");
                         right = true;
                         break;
                 }
@@ -49,19 +49,19 @@ public class KeyInput implements KeyListener {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_W:
                     up = false;
-                    System.out.println("stop");
+//                    System.out.println("stop");
                     break;
                 case KeyEvent.VK_A:
                     left = false;
-                    System.out.println("stop");
+//                    System.out.println("stop");
                     break;
                 case KeyEvent.VK_S:
                     down = false;
-                    System.out.println("stop");
+//                    System.out.println("stop");
                     break;
                 case KeyEvent.VK_D:
                     right = false;
-                    System.out.println("stop");
+//                    System.out.println("stop");
                     break;
             }
         }

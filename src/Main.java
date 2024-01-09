@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
 
 public class Main {
     public enum GameState {TITLE, OPTIONS, PLAY}
@@ -13,8 +11,8 @@ public class Main {
     public static int y = (int)screenSize.getHeight();
     public int ScaleFactor = (int)Math.sqrt(x*x + y*y) / 10;
 
-    public static void main(String[] args) throws IOException {
-        Setup setup = new Setup(new File("data/map/testmap3"), "data/assets/");
+    public static void main(String[] args) {
+        Setup setup = new Setup("data/map/", "data/assets/", 1);
         setup.load();
         GameObject.getWindowSize(x, y);
         new Title();

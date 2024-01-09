@@ -14,14 +14,14 @@ public abstract class GameObject extends JComponent {
     public Action cur_action = Action.IDLE;
     public String cur_tile;
     private static double move_spd;
-    public double xPos = 1100;
-    public double yPos = 300;
+    public double xPos;
+    public double yPos;
     private int xScale = 57;//distance to top right corner of character - temp!
     private int yScale = 86;//distance to bottom left corner of character - temp!
     public int xHitbox = 57; //temp!
     public int yHitbox = 86; //temp!
-    private double levelWidth = Setup.colMax * 100;//the 100 is scale of tiles, temp
-    private double levelHeight = Setup.rowMax * 100;//the 100 is scale of tiles, temp
+    private double levelWidth = Setup.colMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
+    private double levelHeight = Setup.rowMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
     public int scrX = window_width/2 - xHitbox/2;
     public int scrY = window_length/2 - yHitbox/2;
     private double max_hp; //max health points
@@ -33,7 +33,7 @@ public abstract class GameObject extends JComponent {
     private long cur_cd, cur_atkcd; //current cd countdown
     private long cd; //fixed value for this character's ability cd time
     private String ability_name; //we might not need this (update. we need this to read animation)
-    private int character_type; //0 = player, 1 = enemy
+    private int character_type; //0 = player, 1 = enemy **ADD type 2 for npc's**
     private String character_id; //for reading sprite images
     private int ability_range; //range for ability
 
@@ -53,6 +53,8 @@ public abstract class GameObject extends JComponent {
         ability_name = temp[10];
         ability_range = Integer.parseInt(temp[11]);
         character_id = temp[12];
+        xPos = Double.parseDouble(temp[13]);
+        yPos = Double.parseDouble(temp[14]);
 
 //        still = new ImageIcon(character_id + "_still.gif");
 //        left = new ImageIcon(character_id + "_left.gif");
@@ -83,7 +85,7 @@ public abstract class GameObject extends JComponent {
         System.out.println(window_width);
         window_length = y;
         System.out.println(window_length);
-        move_spd = (double) y / 200; //for now takes 5 seconds to move across screen from bottom to top, can scale later
+        move_spd = (double) y / 150; //for now takes 5 seconds to move across screen from bottom to top, can scale later
         System.out.println(move_spd);
     }
 
@@ -104,25 +106,25 @@ public abstract class GameObject extends JComponent {
 
     }
 
-//    public String getTile(){
-//        int x = 0;
-//        int y = 0;
-//
-//
-//        if (cur_direction == Direction.LEFT || cur_direction == Direction.UP) {
-//            x = (int) xPos / 100;
-//            y = (int) yPos / 100; //100 temp for scaling
-//        } if (cur_direction == Direction.DOWN){
-//            x = (int) xPos / 100;
-//            y = (int) (yPos + yHitbox) / 100;
-//        } if (cur_direction == Direction.RIGHT){
-//            x = (int) (xPos + xHitbox) / 100;
-//            y = (int) yPos / 100;
-//        }
-////        System.out.println("[" + x + "," + y + "]");
-//        return Setup.textureData[x][y];
-//        //should create a tile collision checker so we dont have to manually input which tiles are solid
-//    }
+    public String getTile(){
+        int x = 0;
+        int y = 0;
+
+
+        if (cur_direction == Direction.LEFT || cur_direction == Direction.UP) {
+            x = (int) xPos / 100;
+            y = (int) yPos / 100; //100 temp for scaling
+        } if (cur_direction == Direction.DOWN){
+            x = (int) xPos / 100;
+            y = (int) (yPos + yScale) / 100;
+        } if (cur_direction == Direction.RIGHT){
+            x = (int) (xPos + xScale) / 100;
+            y = (int) yPos / 100;
+        }
+//        System.out.println("[" + x + "," + y + "]");
+        return Setup.textureData[Setup.curMap][y][x];
+        //should create a tile collision checker so we dont have to manually input which tiles are solid
+    }
 
     public boolean collisionCheck(){
         int toTouch;
@@ -131,20 +133,20 @@ public abstract class GameObject extends JComponent {
         switch (cur_direction){
             case UP -> {
                 toTouch = (int) (yPos - move_spd) / 100;
-                return !Setup.collisionData[toTouch][(int) xPos / 100] &&
-                        !Setup.collisionData[toTouch][(int) (xPos + xHitbox) / 100];
+                return !Setup.collisionData[Setup.curMap][toTouch][(int) xPos / 100] &&
+                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + xHitbox) / 100];
             } case LEFT -> {
                 toTouch = (int) (xPos - move_spd) / 100;
-                return !Setup.collisionData[(int) yPos / 100][toTouch] &&
-                        !Setup.collisionData[(int) (yPos + yHitbox) / 100][toTouch];
+                return !Setup.collisionData[Setup.curMap][(int) yPos / 100][toTouch] &&
+                        !Setup.collisionData[Setup.curMap][(int) (yPos + yHitbox) / 100][toTouch];
             } case DOWN -> {
                 toTouch = (int) (yPos + yHitbox + move_spd) / 100;
-                return !Setup.collisionData[toTouch][(int) xPos / 100] &&
-                        !Setup.collisionData[toTouch][(int) (xPos + xHitbox) / 100];
+                return !Setup.collisionData[Setup.curMap][toTouch][(int) xPos / 100] &&
+                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + xHitbox) / 100];
             } case RIGHT -> {
                 toTouch = (int) (xPos + xHitbox + move_spd) / 100;
-                return !Setup.collisionData[(int) yPos / 100][toTouch] &&
-                        !Setup.collisionData[(int) (yPos + yHitbox) / 100][toTouch];
+                return !Setup.collisionData[Setup.curMap][(int) yPos / 100][toTouch] &&
+                        !Setup.collisionData[Setup.curMap][(int) (yPos + yHitbox) / 100][toTouch];
             }
         }
         return false;
@@ -169,7 +171,6 @@ public abstract class GameObject extends JComponent {
     public void moveRight(){
         cur_direction = Direction.RIGHT;
         if(xPos + xHitbox + move_spd < levelWidth && collisionCheck()){
-            System.out.println("MOVING RIGHT");
             xPos += move_spd;
         }
     }
@@ -276,8 +277,12 @@ public abstract class GameObject extends JComponent {
 
     }
 
-    public void drawPlayer(Graphics2D gr){ //to be draw camera
-        gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, transparent, null);
+    public void drawPlayer(Graphics2D gr, int drawX, int drawY){ //to be draw camera
+        switch(character_type) {
+            case 0: gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
+            case 1: gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
+        }
+
     }
 
     /**
@@ -285,7 +290,7 @@ public abstract class GameObject extends JComponent {
      * @return a double array that contains all field data of this object.
      */
     public String[] saveData() {
-        return new String[]{Integer.toString(character_type), Double.toString(max_hp), Double.toString(cur_hp), Double.toString(atk_dmg), Double.toString(atk_spd), Integer.toString(atk_range), Double.toString(ap), Integer.toString(ability_type), Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), character_id};
+        return new String[]{Integer.toString(character_type), Double.toString(max_hp), Double.toString(cur_hp), Double.toString(atk_dmg), Double.toString(atk_spd), Integer.toString(atk_range), Double.toString(ap), Integer.toString(ability_type), Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), character_id, Double.toString(xPos), Double.toString(yPos)};
     }
 
 
