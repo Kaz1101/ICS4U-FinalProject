@@ -52,7 +52,7 @@ public class Main {
 		return output;
 	}
 	public static void outputToCSV(String[][] map) throws IOException {
-		FileWriter output = new FileWriter(new File("C:\\Users\\garms\\Desktop\\textures\\output.csv"));
+		FileWriter output = new FileWriter(new File("data/map/output.csv"));
 		for (int i = 0; i < map.length; i++) {
 			for (int j = 0; j < map[i].length - 1; j++) {
 				output.append(map[i][j] + ",");

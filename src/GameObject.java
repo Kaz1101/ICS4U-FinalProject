@@ -142,6 +142,84 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Checks for current x position, if within boarders from the right side, moves right.
+     */
+    public void moveRight(){
+        cur_direction = Direction.RIGHT;
+        cur_action = Action.MOV;
+        if(xPos + xHitbox + move_spd < levelWidth && collisionCheck()){
+            xPos += move_spd;
+        }
+    }
+
+    /**
+     * Checks for current y position, if within boarders from the top, moves up.
+     */
+    public void moveUp(){
+        cur_direction = Direction.UP;
+        cur_action = Action.MOV;
+        if(yPos - move_spd > 0 && collisionCheck()){
+            yPos -= move_spd;
+        }
+    }
+
+    public void moveDown(){
+        cur_direction = Direction.DOWN;
+        cur_action = Action.MOV;
+        if(yPos + yHitbox + move_spd < levelHeight && collisionCheck()){
+            yPos += move_spd;
+        }
+    }
+    private void attack(){
+        cur_atkcd = System.currentTimeMillis() - last_atkcd;
+        //check for player keypress and facing direction for enemy here
+        if(cur_atkcd > atk_spd / 1000){
+            GameFrame.addObject(new GameObject(atk_dmg, damage_type, atk_type, object_id));
+        }
+    }
+
+    public void takeDamage(double dmg){
+        cur_action = Action.DMG;
+        if(cur_hp - dmg >= 0){
+            cur_hp -= dmg;
+        } else {
+            cur_hp = 0;
+        }
+    }
+
+    public void useAbility(){
+        //somehow get range here
+
+
+    }
+
+    private void refreshCD(){
+        if (cur_cd - 10 > 0) {
+            cur_cd -= 10;
+        } else {
+            cur_cd = 0;
+        }
+
+        if (cur_atkcd - 10 > 0) {
+            cur_atkcd -= 10;
+        } else {
+            cur_atkcd = 0;
+        }
+    }
+
+
+    public  void showAbilityAnimation(){
+
+    }
+
+
+    public void showAttackAnimation(){
+
+    }
+
+
+
     public String getTile(){
         int x = 0;
         int y = 0;
@@ -202,147 +280,10 @@ public class GameObject extends JComponent {
         }
     }
 
-    /**
-     * Checks for current x position, if within boarders from the right side, moves right.
-     */
-    public void moveRight(){
-        cur_direction = Direction.RIGHT;
-        cur_action = Action.MOV;
-        if(xPos + xHitbox + move_spd < levelWidth && collisionCheck()){
-            xPos += move_spd;
-        }
-    }
-
-    /**
-     * Checks for current y position, if within boarders from the top, moves up.
-     */
-    public void moveUp(){
-        cur_direction = Direction.UP;
-        cur_action = Action.MOV;
-        if(yPos - move_spd > 0 && collisionCheck()){
-            yPos -= move_spd;
-        }
-    }
-    public void moveDown(){
-        cur_direction = Direction.DOWN;
-        cur_action = Action.MOV;
-        if(yPos + yHitbox + move_spd < levelHeight && collisionCheck()){
-            yPos += move_spd;
-        }
-    }
-
-    private void attack(){
-        cur_atkcd = System.currentTimeMillis() - last_atkcd;
-        //check for player keypress and facing direction for enemy here
-        if(cur_atkcd > atk_spd / 1000){
-            GameFrame.addObject(new GameObject(atk_dmg, damage_type, atk_type, object_id));
-        }
-    }
-
-    public void takeDamage(double dmg){
-        cur_action = Action.DMG;
-        if(cur_hp - dmg >= 0){
-            cur_hp -= dmg;
-        } else {
-            cur_hp = 0;
-        }
-    }
-
-    public void useAbility(){
-        //somehow get range here
-
-
-    }
-
-    private void refreshCD(){
-        if (cur_cd - 10 > 0) {
-            cur_cd -= 10;
-        } else {
-            cur_cd = 0;
-        }
-
-        if (cur_atkcd - 10 > 0) {
-            cur_atkcd -= 10;
-        } else {
-            cur_atkcd = 0;
-        }
-    }
-
-
-    public  void showAbilityAnimation(){
-
-    }
-
-
-    public void showAttackAnimation(){
-
-    }
-
-
-    public boolean collisionCheck(){
-        int toTouch;
-
-    /**
-     * Attacks --> need to change way of calculating attack range and way of calling attack
-     */
-    public void attack(){
-        double x_range = 0, y_range = 0;
-        //set attack range according to current facing direction.
-        switch(cur_direction){
-            //x and y pos is top left corner of object, xHitbox is top right corner, yHitbox is bottom left corner.
-            case RIGHT:
-                x_range = xPos + xHitbox + atk_range;
-                y_range = yPos + yHitbox;
-                break;
-
-            case LEFT:
-                x_range = xPos - atk_range;
-                y_range = yPos + yHitbox;
-                break;
-
-            case UP:
-                x_range = xPos + xHitbox;
-                y_range = yPos - atk_range;
-                break;
-
-            case DOWN:
-                x_range = xPos + xHitbox;
-                y_range = yPos + yHitbox + atk_range;
-                break;
-        }
-
-        //idk either this or keep whatever is below, only use this for projectiles instead
-//        GameFrame.add_attack(new Attack(x_range, y_range, xPos, yPos));
-
-        /*
-            Checks for character type to determine which type of characters the attack is effective on
-            Loops through all opponent objects and checks for if their coordinates is within attack range
-            If within attack range then deduct corresponding hp
-         */
-        switch(character_type) {
-            case 0:
-                for(GameObject enemy: enemies){
-                    if(enemy.xPos <= x_range && enemy.xPos >= this.xPos && enemy.yPos <= y_range && enemy.yPos >= this.yPos){
-                        enemy.takeDamage(this.atk_dmg);
-                    }
-                }
-                break;
-
-            case 1:
-                for(GameObject player: players){
-                    if(player.xPos <= x_range && player.xPos >= this.xPos && player.yPos <= y_range && player.yPos >= this.yPos){
-                        player.takeDamage(this.atk_dmg);
-                    }
-                }
-                break;
-        }
-
-    }
-
     public void drawPlayer(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(character_type) {
-            case 0: gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
-            case 1: gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
+            case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
+            case 1: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
         }
 
     }

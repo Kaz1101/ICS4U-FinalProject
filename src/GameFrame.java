@@ -6,20 +6,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class GameFrame extends JPanel{
-    GameObject testSubject1;
-    private static ArrayList<GameObject> game_objects = new ArrayList<>(50);
-    private boolean game_over = false;
+    GameObject p1;
     GameObject testSubject2;
+    private static ArrayList<GameObject> game_objects = new ArrayList<>();
+    private boolean game_over = false;
 
     public GameFrame() throws IOException {
         Main.window.getContentPane().removeAll();
         Main.window.add(this);
         Setup.curMap = 0;
         this.setBackground(Color.black);
-        testSubject1 = new BooperDooper(RWCharacterFile.readInitialFile("booperdooper"));
-        testSubject2 = new Dogepro(RWCharacterFile.readInitialFile("enemyTest"));
-        this.add(testSubject1);
-        this.add(testSubject2);
+        p1 = new GameObject(RWCharacterFile.readInitialFile("booperdooper"));
+        addObject(RWCharacterFile.readInitialFile("enemyTest"));
         this.revalidate();
         this.repaint();
         this.setVisible(true);
@@ -37,41 +35,39 @@ public class GameFrame extends JPanel{
 //            System.out.println(testSubject1.getTile());
 //              testSubject1.collisionCheck();
                 if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
-                    testSubject1.cur_action = GameObject.Action.IDLE;
+                    p1.cur_action = GameObject.Action.IDLE;
                 }
                 if (Main.input.up) {
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveUp();
+                    p1.cur_action = GameObject.Action.MOV;
+                    p1.moveUp();
                 }
                 if (Main.input.left) {
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveLeft();
+                    p1.cur_action = GameObject.Action.MOV;
+                    p1.moveLeft();
                 }
                 if (Main.input.down) {
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveDown();
+                    p1.cur_action = GameObject.Action.MOV;
+                    p1.moveDown();
                 }
                 if (Main.input.right) {
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveRight();
-                } if (testSubject1.getTile().equals("woodwalldoor")){
+                    p1.cur_action = GameObject.Action.MOV;
+                    p1.moveRight();
+                } if (p1.getTile().equals("woodwalldoor")){
                 System.out.println("AAAAAAAAAAAAAAA");
                     Setup.curMap = 1;
             }
-                testSubject2.cur_action = GameObject.Action.IDLE;
-                repaint();
+//                for (int i = 0; i < game_objects.size(); i++){
+//                    GameObject obj = game_objects.get(i);
+//                    obj.cur_action = GameObject.Action.IDLE;
+//                    obj.doTick();
+//                }
 
-            if (testSubject1.died()) {
+            if (p1.died()) {
                 game_over = true;
             }
-            for(GameObject o : game_objects){
-                o.doTick();
-            }
-
+            repaint();
         }
     });
-
-//a
     @Override
     public void paintComponent(Graphics g){
         super.paintComponent(g);
@@ -86,11 +82,11 @@ public class GameFrame extends JPanel{
             int tileX = col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
             int tileY = row * 100;
             String tileType = Setup.textureData[Setup.curMap][row][col];
-            double paintX = tileX - testSubject1.xPos + testSubject1.scrX;
-            double paintY = tileY - testSubject1.yPos + testSubject1.scrY;
+            double paintX = tileX - p1.xPos + p1.scrX;
+            double paintY = tileY - p1.yPos + p1.scrY;
 
-            if (tileX - 200 < testSubject1.xPos + testSubject1.scrX && tileX + 200 > testSubject1.xPos - testSubject1.scrX
-                    && tileY - 200 < testSubject1.yPos + testSubject1.scrY && tileY + 200 > testSubject1.yPos - testSubject1.scrY) {
+            if (tileX - 200 < p1.xPos + p1.scrX && tileX + 200 > p1.xPos - p1.scrX
+                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
                 gr.drawImage(LoadedSprites.pullTexture(tileType), (int) paintX, (int) paintY, 100, 100, null);
             }
             col++;
@@ -101,17 +97,20 @@ public class GameFrame extends JPanel{
             }
         } //end of map tile painting
 
-        //npc stuff painting
-        double paintX = testSubject2.xPos - testSubject1.xPos + testSubject1.scrX;
-        double paintY = testSubject2.yPos - testSubject1.yPos + testSubject1.scrY;
+        for (GameObject o : game_objects) {
 
-        if (testSubject2.xPos - 200 < testSubject1.xPos + testSubject1.scrX && testSubject2.xPos + 200 > testSubject1.xPos - testSubject1.scrX
-                && testSubject2.yPos - 200 < testSubject1.yPos + testSubject1.scrY && testSubject2.yPos + 200 > testSubject1.yPos - testSubject1.scrY) {
-            testSubject2.drawPlayer(gr, (int) paintX, (int) paintY); //game object array for these?, also for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
+            //npc stuff painting
+            double paintX = o.xPos - p1.xPos + p1.scrX;
+            double paintY = o.yPos - p1.yPos + p1.scrY;
 
+            if (o.xPos - 200 < p1.xPos + p1.scrX && o.xPos + 200 > p1.xPos - p1.scrX
+                    && o.yPos - 200 < p1.yPos + p1.scrY && o.yPos + 200 > p1.yPos - p1.scrY) {
+                o.drawPlayer(gr, (int) paintX, (int) paintY); //game object array for these?, also for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
+
+            }
         }
         //player painting
-        testSubject1.drawPlayer(gr, 0, 0);
+        p1.drawPlayer(gr, 0, 0);
         gr.dispose();
 
     }
