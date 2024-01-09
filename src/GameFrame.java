@@ -71,7 +71,7 @@ public class GameFrame extends JPanel{
         }
     });
 
-
+//a
     @Override
     public void paintComponent(Graphics g){
         super.paintComponent(g);
