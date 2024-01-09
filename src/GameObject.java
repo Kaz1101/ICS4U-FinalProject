@@ -207,6 +207,7 @@ public class GameObject extends JComponent {
 
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
+        //check for player keypress and facing direction for enemy here
         if(cur_atkcd > atk_spd / 1000){
             GameFrame.addObject(new GameObject(atk_dmg, damage_type, atk_type, object_id));
         }
