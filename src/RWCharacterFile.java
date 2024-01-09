@@ -32,7 +32,7 @@ public class RWCharacterFile {
      * @param character a GameCharacter object that we want to save the character file for
      */
     public void writeData(GameObject character) {
-        String name = character.getCharacterID();
+        String name = character.getObjectID();
         File f = new File("data/saveData/" + name + ".csv");
         try(BufferedWriter buffer = new BufferedWriter(new FileWriter(f))) {
             buffer.write(Arrays.toString(character.saveData()));
@@ -44,7 +44,7 @@ public class RWCharacterFile {
 
 
     public ArrayList<String> readData(GameObject character) {
-        String name = character.getCharacterID();
+        String name = character.getObjectID();
         File f = new File("data/savedData/" + name + ".csv");
         ArrayList<String> saveData = new ArrayList<>();
         try {

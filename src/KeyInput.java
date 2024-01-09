@@ -3,7 +3,7 @@ import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
 
-    public boolean up, left, down, right, atk, ability, start;
+    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, start;
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -37,6 +37,22 @@ public class KeyInput implements KeyListener {
 //                        System.out.println("right");
                         right = true;
                         break;
+                    case KeyEvent.VK_KP_UP:
+                        System.out.println("atk up");
+                        atk_up = true;
+                        break;
+                    case KeyEvent.VK_KP_LEFT:
+                        System.out.println("atk left");
+                        atk_left = true;
+                        break;
+                    case KeyEvent.VK_KP_DOWN:
+                        System.out.println("atk down");
+                        atk_down = true;
+                        break;
+                    case KeyEvent.VK_KP_RIGHT:
+                        System.out.println("atk right");
+                        atk_right = true;
+                        break;
                 }
             }
         }
@@ -45,7 +61,7 @@ public class KeyInput implements KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (Main.gameState == Main.gameState.PLAY) {
+        if (Main.gameState == Main.GameState.PLAY) {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_W:
                     up = false;
@@ -62,6 +78,22 @@ public class KeyInput implements KeyListener {
                 case KeyEvent.VK_D:
                     right = false;
 //                    System.out.println("stop");
+                    break;
+                case KeyEvent.VK_KP_UP:
+                    System.out.println("atk up");
+                    atk_up = false;
+                    break;
+                case KeyEvent.VK_KP_LEFT:
+                    System.out.println("atk left");
+                    atk_left = false;
+                    break;
+                case KeyEvent.VK_KP_DOWN:
+                    System.out.println("atk down");
+                    atk_down = false;
+                    break;
+                case KeyEvent.VK_KP_RIGHT:
+                    System.out.println("atk right");
+                    atk_right = false;
                     break;
             }
         }

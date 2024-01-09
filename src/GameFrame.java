@@ -3,9 +3,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class GameFrame extends JPanel{
     GameObject testSubject1;
+    private static ArrayList<GameObject> game_objects = new ArrayList<>(50);
+    private boolean game_over = false;
     GameObject testSubject2;
 
     public GameFrame() throws IOException {
@@ -58,6 +61,12 @@ public class GameFrame extends JPanel{
                 testSubject2.cur_action = GameObject.Action.IDLE;
                 repaint();
 
+            if (testSubject1.died()) {
+                game_over = true;
+            }
+            for(GameObject o : game_objects){
+                o.doTick();
+            }
 
         }
     });
@@ -105,6 +114,14 @@ public class GameFrame extends JPanel{
         testSubject1.drawPlayer(gr, 0, 0);
         gr.dispose();
 
+    }
+
+    public static void addObject(GameObject o){
+        game_objects.add(o);
+    }
+
+    public static void removeObject(GameObject o){
+        game_objects.remove(o);
     }
 
 }
