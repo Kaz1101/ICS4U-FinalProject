@@ -3,7 +3,9 @@ import java.awt.*;
 import java.util.*;
 
 
-public abstract class GameObject extends JComponent {
+public class GameObject extends JComponent {
+
+
     private enum Direction {LEFT, RIGHT, UP, DOWN}
     public enum Action {IDLE, MOV, ATK, DMG}
     private static ArrayList<GameObject> players = new ArrayList<>(2);
@@ -12,7 +14,8 @@ public abstract class GameObject extends JComponent {
     private Color transparent = new Color(0,0,0,0);
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
     public Action cur_action = Action.IDLE;
-    public String cur_tile;
+    private boolean is_dead = false;
+    //public String cur_tile;
     private static double move_spd;
     public double xPos = 1100;
     public double yPos = 300;
@@ -26,15 +29,15 @@ public abstract class GameObject extends JComponent {
     public int scrY = window_length/2 - yHitbox/2;
     private double max_hp; //max health points
     private double cur_hp; //current health points
-    private double atk_dmg, atk_spd;
-    private int atk_range;
+    private int atk_dmg, atk_spd;
+    private int atk_type; //-1 = melee, 1 = ranged
     private double ap;  //ability power that is used as base effectiveness of ability
-    private int ability_type;// -1 = dmg, 1 = heal   (edit. should we only have aoe?)
-    private long cur_cd, cur_atkcd; //current cd countdown
+    private int damage_type; // -1 = enemy's, 1 = player's
+    private long cur_cd, cur_atkcd, last_atkcd; //current cd countdown
     private long cd; //fixed value for this character's ability cd time
     private String ability_name; //we might not need this (update. we need this to read animation)
-    private int character_type; //0 = player, 1 = enemy
-    private String character_id; //for reading sprite images
+    private int character_type; //0 = player, 1 = enemy, 2 = attack
+    private String object_id; //for reading sprite images
     private int ability_range; //range for ability
 
 //    private ImageIcon still, left, right, move;
@@ -43,28 +46,15 @@ public abstract class GameObject extends JComponent {
         character_type = Integer.parseInt(temp[0]);
         max_hp = Double.parseDouble(temp[1]);
         cur_hp = Double.parseDouble(temp[2]);
-        atk_dmg = Double.parseDouble(temp[3]);
-        atk_spd = Double.parseDouble(temp[4]);
-        atk_range = Integer.parseInt(temp[5]);
+        atk_dmg = Integer.parseInt(temp[3]);
+        atk_spd = Integer.parseInt(temp[4]);
+        atk_type = Integer.parseInt(temp[5]);
         ap = Double.parseDouble(temp[6]);
-        ability_type = Integer.parseInt(temp[7]);
-        cd = Long.parseLong(temp[8]);
-        cur_cd = Long.parseLong(temp[9]);
-        ability_name = temp[10];
-        ability_range = Integer.parseInt(temp[11]);
-        character_id = temp[12];
-
-//        still = new ImageIcon(character_id + "_still.gif");
-//        left = new ImageIcon(character_id + "_left.gif");
-//        right = new ImageIcon(character_id + "_right.gif");
-//        move = new ImageIcon(character_id + "_move.gif");
-
-
-        //character_type, max_hp, cur_hp, atk_dmg, atk_spd, atk_range, ap, ability_type, cd, cur_cd, ability_name, ability_range, character_id
-
-
-
-
+        cd = Long.parseLong(temp[7]);
+        cur_cd = Long.parseLong(temp[8]);
+        ability_name = temp[9];
+        ability_range = Integer.parseInt(temp[10]);
+        object_id = temp[11];
 
         //add this game character to corresponding arraylist
         switch(character_type){
@@ -74,7 +64,19 @@ public abstract class GameObject extends JComponent {
             case 1:
                 enemies.add(this);
                 break;
+
         }
+        GameFrame.addObject(this);
+    }
+
+    public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id){
+        this.atk_dmg = atk_dmg;
+        this.damage_type = damage_type;
+        this.atk_type = atk_type;
+        this.object_id = character_id + "_atk";
+        max_hp = 1;//if we want multiple hits or not
+        cur_hp = 1;
+        //set position and hitbox here
     }
 
 
@@ -89,19 +91,53 @@ public abstract class GameObject extends JComponent {
 
 
     public void doTick(){
-        //Checks for if on cooldown, takes away tick time from current cooldown
-        if (cur_cd - 50 > 0) {
-            cur_cd -= 50;
-        } else {
-            cur_cd = 0;
-        }
+        //refresh cooldown
+        switch(character_type) {
+            case 0:
+            case 1:
+                refreshCD();
+                attack();
+                useAbility();
+                die();
+                break;
 
-        if(cur_atkcd - 50 > 0){
-            cur_atkcd -= 50;
-        } else {
-            cur_atkcd = 0;
-        }
+            case 2:
+                moveForward();
+                do_damage();
+                break;
 
+        }
+    }
+
+    private void moveForward() {
+    }
+
+    private void do_damage() {
+        switch(damage_type){
+            case 1:
+                for(GameObject enemy : enemies){
+                    if(this.getBounds().intersects(enemy.getBounds())){
+                        enemy.takeDamage(atk_dmg);
+                        cur_hp -= 1;
+                    }
+                    die();
+                }
+                break;
+            case -1:
+                for(GameObject player : players){
+                    if(this.getBounds().intersects(player.getBounds())){
+                        player.takeDamage(atk_dmg);
+                        cur_hp -= 1;
+                    }
+                    die();
+                }
+        }
+    }
+
+    private void die() {
+        if(cur_hp <= 0){
+            is_dead = true;
+        }
     }
 
 //    public String getTile(){
@@ -123,6 +159,98 @@ public abstract class GameObject extends JComponent {
 //        return Setup.textureData[x][y];
 //        //should create a tile collision checker so we dont have to manually input which tiles are solid
 //    }
+
+
+
+    //Movement and attack
+
+    /**
+     * Checks for current x position, if within boarders from the left side, moves left.
+     */
+    public void moveLeft(){
+        cur_direction = Direction.LEFT;
+        cur_action = Action.MOV;
+        if(xPos - move_spd > 0 && collisionCheck()){
+            xPos -= move_spd;
+        }
+    }
+
+    /**
+     * Checks for current x position, if within boarders from the right side, moves right.
+     */
+    public void moveRight(){
+        cur_direction = Direction.RIGHT;
+        cur_action = Action.MOV;
+        if(xPos + xHitbox + move_spd < levelWidth && collisionCheck()){
+            System.out.println("MOVING RIGHT");
+            xPos += move_spd;
+        }
+    }
+
+    /**
+     * Checks for current y position, if within boarders from the top, moves up.
+     */
+    public void moveUp(){
+        cur_direction = Direction.UP;
+        cur_action = Action.MOV;
+        if(yPos - move_spd > 0 && collisionCheck()){
+            yPos -= move_spd;
+        }
+    }
+    public void moveDown(){
+        cur_direction = Direction.DOWN;
+        cur_action = Action.MOV;
+        if(yPos + yHitbox + move_spd < levelHeight && collisionCheck()){
+            yPos += move_spd;
+        }
+    }
+
+    private void attack(){
+        cur_atkcd = System.currentTimeMillis() - last_atkcd;
+        if(cur_atkcd > atk_spd / 1000){
+            GameFrame.addObject(new GameObject(atk_dmg, damage_type, atk_type, object_id));
+        }
+    }
+
+    public void takeDamage(double dmg){
+        cur_action = Action.DMG;
+        if(cur_hp - dmg >= 0){
+            cur_hp -= dmg;
+        } else {
+            cur_hp = 0;
+        }
+    }
+
+    public void useAbility(){
+        //somehow get range here
+
+
+    }
+
+    private void refreshCD(){
+        if (cur_cd - 10 > 0) {
+            cur_cd -= 10;
+        } else {
+            cur_cd = 0;
+        }
+
+        if (cur_atkcd - 10 > 0) {
+            cur_atkcd -= 10;
+        } else {
+            cur_atkcd = 0;
+        }
+    }
+
+
+    public  void showAbilityAnimation(){
+
+    }
+
+
+    public void showAttackAnimation(){
+
+    }
+
 
     public boolean collisionCheck(){
         int toTouch;
@@ -150,134 +278,8 @@ public abstract class GameObject extends JComponent {
         return false;
     }
 
-
-    //Movement and attack
-
-    /**
-     * Checks for current x position, if within boarders from the left side, moves left.
-     */
-    public void moveLeft(){
-        cur_direction = Direction.LEFT;
-        if(xPos - move_spd > 0 && collisionCheck()){
-            xPos -= move_spd;
-        }
-    }
-
-    /**
-     * Checks for current x position, if within boarders from the right side, moves right.
-     */
-    public void moveRight(){
-        cur_direction = Direction.RIGHT;
-        if(xPos + xHitbox + move_spd < levelWidth && collisionCheck()){
-            System.out.println("MOVING RIGHT");
-            xPos += move_spd;
-        }
-    }
-
-    /**
-     * Checks for current y position, if within boarders from the top, moves up.
-     */
-    public void moveUp(){
-        cur_direction = Direction.UP;
-        if(yPos - move_spd > 0 && collisionCheck()){
-            yPos -= move_spd;
-        }
-    }
-    public void moveDown(){
-        cur_direction = Direction.DOWN;
-        if(yPos + yHitbox + move_spd < levelHeight && collisionCheck()){
-            yPos += move_spd;
-        }
-    }
-
-    public void takeDamage(double dmg){
-        if(cur_hp - dmg >= 0){
-            cur_hp -= dmg;
-        } else {
-            cur_hp = 0;
-        }
-    }
-
-    public void useAbility(){
-        //somehow get range here
-        switch(ability_type){
-            case -1:
-                //switch again for current character type
-
-            case 1:
-        }
-
-    }
-
-    /**
-     * Each subclass should override to show corresponding ability animation
-     */
-    public abstract void showAbilityAnimation();
-
-    /**
-     * Each subclass should override to show corresponding attack animation
-     */
-    public abstract void showAttackAnimation();
-
-    /**
-     * Attacks --> need to change way of calculating attack range and way of calling attack
-     */
-    public void attack(){
-        double x_range = 0, y_range = 0;
-        //set attack range according to current facing direction.
-        switch(cur_direction){
-            //x and y pos is top left corner of object, xHitbox is top right corner, yHitbox is bottom left corner.
-            case RIGHT:
-                x_range = xPos + xHitbox + atk_range;
-                y_range = yPos + yHitbox;
-                break;
-
-            case LEFT:
-                x_range = xPos - atk_range;
-                y_range = yPos + yHitbox;
-                break;
-
-            case UP:
-                x_range = xPos + xHitbox;
-                y_range = yPos - atk_range;
-                break;
-
-            case DOWN:
-                x_range = xPos + xHitbox;
-                y_range = yPos + yHitbox + atk_range;
-                break;
-        }
-
-        //idk either this or keep whatever is below, only use this for projectiles instead
-//        GameFrame.add_attack(new Attack(x_range, y_range, xPos, yPos));
-
-        /*
-            Checks for character type to determine which type of characters the attack is effective on
-            Loops through all opponent objects and checks for if their coordinates is within attack range
-            If within attack range then deduct corresponding hp
-         */
-        switch(character_type) {
-            case 0:
-                for(GameObject enemy: enemies){
-                    if(enemy.xPos <= x_range && enemy.xPos >= this.xPos && enemy.yPos <= y_range && enemy.yPos >= this.yPos){
-                        enemy.takeDamage(this.atk_dmg);
-                    }
-                }
-                break;
-
-            case 1:
-                for(GameObject player: players){
-                    if(player.xPos <= x_range && player.xPos >= this.xPos && player.yPos <= y_range && player.yPos >= this.yPos){
-                        player.takeDamage(this.atk_dmg);
-                    }
-                }
-                break;
-        }
-
-    }
-
     public void drawPlayer(Graphics2D gr){ //to be draw camera
-        gr.drawImage(LoadedSprites.pullTexture(character_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, transparent, null);
+        gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, transparent, null);
     }
 
     /**
@@ -285,17 +287,26 @@ public abstract class GameObject extends JComponent {
      * @return a double array that contains all field data of this object.
      */
     public String[] saveData() {
-        return new String[]{Integer.toString(character_type), Double.toString(max_hp), Double.toString(cur_hp), Double.toString(atk_dmg), Double.toString(atk_spd), Integer.toString(atk_range), Double.toString(ap), Integer.toString(ability_type), Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), character_id};
+        return new String[]{Integer.toString(character_type), Double.toString(max_hp), Double.toString(cur_hp), Double.toString(atk_dmg), Double.toString(atk_spd), Integer.toString(atk_type), Double.toString(ap), Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), object_id};
     }
 
 
     //getters and setters
-    public String getCharacterID() {
-        return character_id;
+    public String getObjectID() {
+        return object_id;
     }
 
-    public void setCharacterID(String s){
-        character_id = s;
+
+    public void setxPos(double x){
+        xPos = x;
+    }
+
+    public void setyPos(double y){
+        yPos = y;
+    }
+
+    public boolean died() {
+        return is_dead;
     }
 
 

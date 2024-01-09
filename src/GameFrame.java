@@ -3,9 +3,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class GameFrame extends JPanel{
     GameObject testSubject1;
+    private static ArrayList<GameObject> game_objects = new ArrayList<>(50);
+    private boolean game_over = false;
 
     public GameFrame() throws IOException {
         Main.window.getContentPane().removeAll();
@@ -29,27 +32,34 @@ public class GameFrame extends JPanel{
             //for collision: keep track of what tile the character is on, only call movement if character is not on said tile?
 //            System.out.println(testSubject1.getTile());
 //              testSubject1.collisionCheck();
-                if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
-                    testSubject1.cur_action = GameObject.Action.IDLE;
-                }
-                if (Main.input.up) {
-                    System.out.println("up");
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveUp();
-                }
-                if (Main.input.left) {
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveLeft();
-                }
-                if (Main.input.down) {
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveDown();
-                }
-                if (Main.input.right) {
-                    testSubject1.cur_action = GameObject.Action.MOV;
-                    testSubject1.moveRight();
-                }
+            if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
+                testSubject1.cur_action = GameObject.Action.IDLE;
+            }
+            if (Main.input.up) {
+                System.out.println("up");
+                //testSubject1.cur_action = GameObject.Action.MOV;
+                testSubject1.moveUp();
+            }
+            if (Main.input.left) {
+                //testSubject1.cur_action = GameObject.Action.MOV;
+                testSubject1.moveLeft();
+            }
+            if (Main.input.down) {
+                //testSubject1.cur_action = GameObject.Action.MOV;
+                testSubject1.moveDown();
+            }
+            if (Main.input.right) {
+                //testSubject1.cur_action = GameObject.Action.MOV;
+                testSubject1.moveRight();
+            }
             repaint();
+
+            if (testSubject1.died()) {
+                game_over = true;
+            }
+            for(GameObject o : game_objects){
+                o.doTick();
+            }
 
         }
     });
@@ -85,6 +95,14 @@ public class GameFrame extends JPanel{
         testSubject1.drawPlayer(gr);
         gr.dispose();
 
+    }
+
+    public static void addObject(GameObject o){
+        game_objects.add(o);
+    }
+
+    public static void removeObject(GameObject o){
+        game_objects.remove(o);
     }
 
 }
