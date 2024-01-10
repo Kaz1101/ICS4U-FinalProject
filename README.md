@@ -10,6 +10,7 @@ public class ComsciFinal{
     try{
       code();
     } catch (NoBrainExeption e){
+      cry();
       notLive();
     }
   }
