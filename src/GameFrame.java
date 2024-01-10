@@ -115,8 +115,23 @@ public class GameFrame extends JPanel{
 
     }
 
-    public static void addObject(GameObject o){
-        game_objects.add(o);
+    /**
+     * Creates and adds a character GameObject to the GameObject arraylist
+     * @param s a string array that contains information of a character
+     */
+    public static void addObject(String[] s){
+        game_objects.add(new GameObject(s));
+    }
+
+    /**
+     * Creates and adds an attack GameObject to the GameObject arraylist
+     * @param atk_dmg the damage of this attack
+     * @param damage_type which character type this attack is useful against
+     * @param atk_type ranged or melee attack
+     * @param character_id which character's attack animation to pull
+     */
+    public static void addObject(int atk_dmg, int damage_type, int atk_type, String character_id){
+        game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id));
     }
 
     public static void removeObject(GameObject o){
