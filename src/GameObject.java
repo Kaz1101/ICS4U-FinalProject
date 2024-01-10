@@ -10,8 +10,8 @@ public class GameObject extends JComponent {
     public enum Action {IDLE, MOV, ATK, DMG}
     private static ArrayList<GameObject> players = new ArrayList<>(2);
     private static ArrayList<GameObject> enemies = new ArrayList<>(30);
+    private static ArrayList<GameObject> npc = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
     private static int window_width, window_length;
-    private Color transparent = new Color(0,0,0,0);
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
     public Action cur_action = Action.IDLE;
     private boolean is_dead = false;
@@ -19,14 +19,19 @@ public class GameObject extends JComponent {
     private static double move_spd;
     public double xPos;
     public double yPos;
+    private double originX; //the origin stuff and dedicated speed is under testing!
+    private double originY;
+    private double npcSpd;
     private int xScale = 57;//distance to top right corner of character - temp!
     private int yScale = 86;//distance to bottom left corner of character - temp!
-    public int xHitbox = 57; //temp!
-    public int yHitbox = 86; //temp!
+    private int hitboxL = 10; //temp, the hitbox stuff is all currently under testing
+    private int hitboxR = xScale - 10;
+    private int hitboxU = yScale - 50;
+    private int hitboxD = yScale;
     private double levelWidth = Setup.colMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
     private double levelHeight = Setup.rowMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
-    public int scrX = window_width/2 - xHitbox/2;
-    public int scrY = window_length/2 - yHitbox/2;
+    public int scrX = window_width/2 - xScale/2;
+    public int scrY = window_length/2 - yScale/2;
     private double max_hp; //max health points
     private double cur_hp; //current health points
     private int atk_dmg, atk_spd;
@@ -66,6 +71,13 @@ public class GameObject extends JComponent {
             case 1:
                 enemies.add(this);
                 break;
+            case 2:
+                npc.add(this);
+                originX = xPos;
+                originY = yPos;
+                npcSpd = move_spd * 0.25;
+                cur_direction = Direction.LEFT;
+                break;
 
         }
         GameFrame.addObject(this);
@@ -96,13 +108,17 @@ public class GameObject extends JComponent {
         //refresh cooldown
         switch(character_type) {
             case 0:
+                refreshCD();
+                //attack();
+                //useAbility();
+                die();
+                break;
             case 1:
                 refreshCD();
                 attack();
                 useAbility();
                 die();
                 break;
-
             case 2:
                 moveForward();
                 do_damage();
@@ -112,6 +128,22 @@ public class GameObject extends JComponent {
     }
 
     private void moveForward() {
+    }
+
+    private void lrMove(double spd){
+        if (cur_direction == Direction.LEFT){
+            if (xPos >= originX - 400) {
+                xPos -= spd;
+            } else {
+                cur_direction = Direction.RIGHT;
+            }
+        } if (cur_direction == Direction.RIGHT){
+            if (xPos <= originX){
+                xPos += spd;
+            } else {
+                cur_direction = Direction.LEFT;
+            }
+        }
     }
 
     private void do_damage() {
@@ -143,17 +175,6 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * Checks for current x position, if within boarders from the right side, moves right.
-     */
-    public void moveRight(){
-        cur_direction = Direction.RIGHT;
-        cur_action = Action.MOV;
-        if(xPos + xHitbox + move_spd < levelWidth && collisionCheck()){
-            xPos += move_spd;
-        }
-    }
-
-    /**
      * Checks for current y position, if within boarders from the top, moves up.
      */
     public void moveUp(){
@@ -167,15 +188,37 @@ public class GameObject extends JComponent {
     public void moveDown(){
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
-        if(yPos + yHitbox + move_spd < levelHeight && collisionCheck()){
+        if(yPos + yScale + move_spd < levelHeight && collisionCheck()){
             yPos += move_spd;
         }
     }
+
+    /**
+     * Checks for current x position, if within boarders from the left side, moves left.
+     */
+    public void moveLeft(){
+        cur_direction = Direction.LEFT;
+        cur_action = Action.MOV;
+        if(xPos - move_spd > 0 && collisionCheck()){
+            xPos -= move_spd;
+        }
+    }
+    /**
+     * Checks for current x position, if within boarders from the right side, moves right.
+     */
+    public void moveRight(){
+        cur_direction = Direction.RIGHT;
+        cur_action = Action.MOV;
+        if(xPos + xScale + move_spd < levelWidth && collisionCheck()){
+            xPos += move_spd;
+        }
+    }
+
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
         //check for player keypress and facing direction for enemy here
         if(cur_atkcd > atk_spd / 1000){
-            GameFrame.addObject(new GameObject(atk_dmg, damage_type, atk_type, object_id));
+            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id);
         }
     }
 
@@ -208,8 +251,11 @@ public class GameObject extends JComponent {
         }
     }
 
-
     public  void showAbilityAnimation(){
+
+    }
+
+    public void showAbilityAnimation(){
 
     }
 
@@ -246,21 +292,21 @@ public class GameObject extends JComponent {
         //create boolean collision 2d array
         switch (cur_direction){
             case UP -> {
-                toTouch = (int) (yPos - move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][toTouch][(int) xPos / 100] &&
-                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + xHitbox) / 100];
+                toTouch = (int) (yPos + hitboxU - move_spd) / 100;
+                return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
+                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
             } case LEFT -> {
-                toTouch = (int) (xPos - move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][(int) yPos / 100][toTouch] &&
-                        !Setup.collisionData[Setup.curMap][(int) (yPos + yHitbox) / 100][toTouch];
+                toTouch = (int) (xPos + hitboxL - move_spd) / 100;
+                return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
+                        !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
             } case DOWN -> {
-                toTouch = (int) (yPos + yHitbox + move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][toTouch][(int) xPos / 100] &&
-                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + xHitbox) / 100];
+                toTouch = (int) (yPos + hitboxD + move_spd) / 100;
+                return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
+                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
             } case RIGHT -> {
-                toTouch = (int) (xPos + xHitbox + move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][(int) yPos / 100][toTouch] &&
-                        !Setup.collisionData[Setup.curMap][(int) (yPos + yHitbox) / 100][toTouch];
+                toTouch = (int) (xPos + hitboxR + move_spd) / 100;
+                return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
+                        !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
             }
         }
         return false;
@@ -269,21 +315,10 @@ public class GameObject extends JComponent {
 
     //Movement and attack
 
-    /**
-     * Checks for current x position, if within boarders from the left side, moves left.
-     */
-    public void moveLeft(){
-        cur_direction = Direction.LEFT;
-        cur_action = Action.MOV;
-        if(xPos - move_spd > 0 && collisionCheck()){
-            xPos -= move_spd;
-        }
-    }
-
     public void drawPlayer(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(character_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
-            case 1: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
+            case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
         }
 
     }

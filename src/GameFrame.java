@@ -56,11 +56,11 @@ public class GameFrame extends JPanel{
                 System.out.println("AAAAAAAAAAAAAAA");
                     Setup.curMap = 1;
             }
-//                for (int i = 0; i < game_objects.size(); i++){
-//                    GameObject obj = game_objects.get(i);
-//                    obj.cur_action = GameObject.Action.IDLE;
-//                    obj.doTick();
-//                }
+                for (int i = 0; i < game_objects.size(); i++){
+                    GameObject obj = game_objects.get(i);
+                    obj.cur_action = GameObject.Action.IDLE;
+                    obj.doTick();
+                }
 
             if (p1.died()) {
                 game_over = true;
@@ -105,7 +105,7 @@ public class GameFrame extends JPanel{
 
             if (o.xPos - 200 < p1.xPos + p1.scrX && o.xPos + 200 > p1.xPos - p1.scrX
                     && o.yPos - 200 < p1.yPos + p1.scrY && o.yPos + 200 > p1.yPos - p1.scrY) {
-                o.drawPlayer(gr, (int) paintX, (int) paintY); //game object array for these?, also for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
+                o.drawPlayer(gr, (int) paintX, (int) paintY); // for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
 
             }
         }
