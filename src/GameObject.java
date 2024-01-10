@@ -114,16 +114,15 @@ public class GameObject extends JComponent {
                 die();
                 break;
             case 1:
-                refreshCD();
-                attack();
-                useAbility();
-                die();
+                //moveForward();
+                //do_damage();
                 break;
             case 2:
-                moveForward();
-                do_damage();
+                if (atk_type == 1){
+                    cur_action = Action.MOV;
+                    lrMove(npcSpd);
+                }
                 break;
-
         }
     }
 
