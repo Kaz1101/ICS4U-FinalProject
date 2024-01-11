@@ -133,14 +133,22 @@ public class GameObject extends JComponent {
         }
     }
 
-    public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id){
+    public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id, double xPos, double yPos, String dir){
         this.atk_dmg = atk_dmg;
         this.damage_type = damage_type;
         this.atk_type = atk_type;
         this.object_id = character_id + "_atk";
-        character_type = 2;
+        this.xPos = xPos;
+        this.yPos = yPos - 20;
+        character_type = 4;
         max_hp = 1;//if we want multiple hits or not
         cur_hp = 1;
+        switch(dir){
+            case "u": cur_direction = Direction.UP; break;
+            case "d": cur_direction = Direction.DOWN; break;
+            case "l": cur_direction = Direction.LEFT; break;
+            case "r": cur_direction = Direction.RIGHT; break;
+        }
         //set position and hitbox here
     }
 
@@ -164,6 +172,10 @@ public class GameObject extends JComponent {
                 //useAbility();
                 die();
                 break;
+            case 4:
+                moveForward();
+                do_damage();
+                kill();
             case 1:
                 //moveForward();
                 //do_damage();
@@ -187,7 +199,22 @@ public class GameObject extends JComponent {
 
 
 
+    private void kill() {
+        for(GameObject player : players){
+            if(Math.abs(this.xPos - player.xPos) > (double) window_width / 2 + 300){
+                cur_hp -= max_hp;
+                die();
+            }
+        }
+    }
+
     private void moveForward() {
+        switch(cur_direction){
+            case UP: moveUp(); break;
+            case DOWN: moveDown(); break;
+            case LEFT: moveLeft(); break;
+            case RIGHT: moveRight(); break;
+        }
     }
 
     private int counter = 0;
@@ -218,6 +245,7 @@ public class GameObject extends JComponent {
             }
         }
     }
+
 
     private void randomMove(double spd){
 
@@ -256,13 +284,17 @@ public class GameObject extends JComponent {
                 break;
             case -1:
                 for(GameObject player : players){
-                    if(this.getBounds().intersects(player.getBounds())){
+                    if(touches(player)){
                         player.takeDamage(atk_dmg);
                         cur_hp -= 1;
                     }
                     die();
                 }
         }
+    }
+
+    private boolean touches(GameObject o) {
+        return this.getBounds().intersects(o.getBounds());
     }
 
     private void die() {
@@ -278,7 +310,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.UP;
         cur_action = Action.MOV;
         if(yPos - move_spd > 0 && collisionCheck()){
-            yPos -= move_spd;
+            //if(!characterCollision()) {
+                yPos -= move_spd;
+            //} else {
+                yPos += move_spd;
+            //}
         }
     }
 
@@ -286,7 +322,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
         if(yPos + yScale + move_spd < levelHeight && collisionCheck()){
-            yPos += move_spd;
+            //if(!characterCollision()) {
+                yPos += move_spd;
+            //} else {
+                yPos -= move_spd;
+           // }
         }
     }
 
@@ -307,16 +347,100 @@ public class GameObject extends JComponent {
         cur_direction = Direction.RIGHT;
         cur_action = Action.MOV;
         if(xPos + xScale + move_spd < levelWidth && collisionCheck()){
-            xPos += move_spd;
+            if(xPos - move_spd > 0 && collisionCheck()){
+                //if(!characterCollision()) {
+                    xPos += move_spd;
+                //} else {
+                    xPos -= move_spd;
+                //}
+            }
+        }
+    }
+
+    public void attack(String dir){
+        if (cur_atkcd > atk_spd / 1000 && withinAttackRange()) {
+            switch (dir) {
+                case "U":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
+                    last_atkcd = cur_atkcd;
+                    break;
+                case "D":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
+                    last_atkcd = cur_atkcd;
+                    break;
+                case "L":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
+                    last_atkcd = cur_atkcd;
+                    break;
+                case "R":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
+                    last_atkcd = cur_atkcd;
+                    break;
+            }
         }
     }
 
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
-        //check for player keypress and facing direction for enemy here
-        if(cur_atkcd > atk_spd / 1000){
-            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id);
+        switch(character_type) {
+            //case 0:
+
+            case 1:
+                if (cur_atkcd > atk_spd / 1000 && withinAttackRange()) {
+                    switch (cur_direction) {
+                        case UP:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
+                            last_atkcd = cur_atkcd;
+                            break;
+                        case DOWN:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
+                            last_atkcd = cur_atkcd;
+                            break;
+                        case LEFT:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
+                            last_atkcd = cur_atkcd;
+                            break;
+                        case RIGHT:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
+                            last_atkcd = cur_atkcd;
+                            break;
+                    }
+                }
         }
+    }
+
+    private boolean withinAttackRange() {
+        double atk_range = 0;
+        for(GameObject player : players) {
+            switch(atk_type){
+                case -1: atk_range = 50; break;
+                case 1: atk_range = 500; break;
+            }
+            switch (cur_direction) {
+                case UP:
+                    if (yPos - player.yPos <= atk_range) {
+                        return true;
+                    }
+                    break;
+                case DOWN:
+                    if(player.yPos - yPos <= atk_range){
+                        return true;
+                    }
+                    break;
+                case LEFT:
+                    if(xPos - player.xPos <= atk_range){
+                        return true;
+                    }
+                    break;
+                case RIGHT:
+                    if(player.xPos - xPos <= atk_range){
+                        return true;
+                    }
+                    break;
+            }
+            return false;
+        }
+        return false;
     }
 
     public void interact() {
@@ -442,6 +566,7 @@ public class GameObject extends JComponent {
         switch(character_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
             case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
+            case 4: gr.drawImage(LoadedSprites.pullTexture(object_id + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
 
     }

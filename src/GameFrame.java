@@ -53,6 +53,24 @@ public class GameFrame extends JPanel{
                 }
                 if (Main.input.right) {
                     p1.moveRight();
+                }
+                if(Main.input.atk_up){
+                    p1.attack("U");
+                }
+                if(Main.input.atk_down){
+                    p1.attack("D");
+                }
+                if(Main.input.atk_left){
+                    p1.attack("L");
+                }
+                if(Main.input.atk_right){
+                    p1.attack("R");
+                }
+
+
+                if (p1.getTile().equals("woodwalldoor")){
+                System.out.println("AAAAAAAAAAAAAAA");
+                    Setup.curMap = 1;
                 } if(Main.input.interact) {
                      p1.cur_action = GameObject.Action.INTERACT;
                      p1.interact();
@@ -70,6 +88,8 @@ public class GameFrame extends JPanel{
                         obj.doTick();
                     }
             }
+
+
 
             if (p1.died()) {
                 game_over = true;
