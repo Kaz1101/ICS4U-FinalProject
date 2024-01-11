@@ -67,6 +67,7 @@ public class GameObject extends JComponent {
         yPos = Double.parseDouble(temp[13]);
 
         if(Boolean.parseBoolean(temp[14])) {
+            System.out.println("test");
             interactables.add(this);
         }
 
@@ -89,7 +90,7 @@ public class GameObject extends JComponent {
                 cur_direction = Direction.LEFT;
                 break;
             case 3:
-                if(object_id.equals("door_in")) {
+                if(object_id.equals("door_in.csv")) {
                     type = ObjectType.DOOR_IN;
                 } if(object_id.equals("door_out")) {
                     type = ObjectType.DOOR_OUT;
@@ -239,6 +240,7 @@ public class GameObject extends JComponent {
 
     public void interact() {
         for (GameObject interactable : interactables) {
+            System.out.println(getDistance(interactable, this));
             if (getDistance(interactable, this) <= 100) {
                 interactable.doInteract();
             }
@@ -379,7 +381,11 @@ public class GameObject extends JComponent {
     }
 
     public double getDistance(GameObject x, GameObject y) {
-        return Math.sqrt(Math.pow(Math.abs(x.xPos - y.xPos), 2) + Math.pow(Math.abs(x.yPos - y.yPos), 2));
+        System.out.println(x.xPos);
+        System.out.println(x.yPos);
+        System.out.println(y.xPos);
+        System.out.println(y.yPos);
+        return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
     public boolean died() {

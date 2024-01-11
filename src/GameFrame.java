@@ -18,6 +18,7 @@ public class GameFrame extends JPanel{
         this.setBackground(Color.black);
         p1 = new GameObject(RWCharacterFile.readInitialFile("booperdooper"));
         addObject(RWCharacterFile.readInitialFile("enemyTest"));
+        addObject(RWCharacterFile.readInitialFile("door_in"));
         this.revalidate();
         this.repaint();
         this.setVisible(true);
