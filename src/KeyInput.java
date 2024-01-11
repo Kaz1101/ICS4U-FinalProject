@@ -3,7 +3,7 @@ import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
 
-    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, start;
+    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, start, interact;
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -53,6 +53,10 @@ public class KeyInput implements KeyListener {
                         System.out.println("atk right");
                         atk_right = true;
                         break;
+                    case KeyEvent.VK_E:
+                        System.out.println("interact");
+                        interact = true;
+                        break;
                 }
             }
         }
@@ -95,6 +99,10 @@ public class KeyInput implements KeyListener {
                     System.out.println("atk right");
                     atk_right = false;
                     break;
+                case KeyEvent.VK_E:
+                        System.out.println("interact");
+                        interact = true;
+                        break;
             }
         }
     }

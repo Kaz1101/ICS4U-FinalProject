@@ -55,7 +55,10 @@ public class GameFrame extends JPanel{
                 } if (p1.getTile().equals("woodwalldoor")){
                 System.out.println("AAAAAAAAAAAAAAA");
                     Setup.curMap = 1;
-            }
+                } if(Main.input.interact) {
+                     p1.cur_action = GameObject.Action.INTERACT;
+                     p1.interact();
+                }
                 for (int i = 0; i < game_objects.size(); i++){
                     GameObject obj = game_objects.get(i);
                     obj.cur_action = GameObject.Action.IDLE;
