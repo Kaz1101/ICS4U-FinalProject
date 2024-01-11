@@ -12,7 +12,7 @@ public class Main {
     public int ScaleFactor = (int)Math.sqrt(x*x + y*y) / 10;
 
     public static void main(String[] args) {
-        Setup setup = new Setup("data/map/", "data/assets/", 1);
+        Setup setup = new Setup("data/map/", "data/assets/", 2);
         setup.load();
         GameObject.getWindowSize(x, y);
         new Title();

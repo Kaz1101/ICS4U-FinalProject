@@ -7,21 +7,25 @@ public class GameObject extends JComponent {
 
 
     private enum Direction {LEFT, RIGHT, UP, DOWN}
-    public enum Action {IDLE, MOV, ATK, DMG}
+    public enum Action {IDLE, MOV, ATK, DMG, INTERACT}
+    private enum ObjectType {PLAYER, NPC, ENEMY, DOOR_IN, DOOR_OUT, INVENTORY}
     private static ArrayList<GameObject> players = new ArrayList<>(2);
     private static ArrayList<GameObject> enemies = new ArrayList<>(30);
     private static ArrayList<GameObject> npc = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
+    private static ArrayList<GameObject> interactables = new ArrayList<>(30);
     private static int window_width, window_length;
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
     public Action cur_action = Action.IDLE;
+    private ObjectType type;
     private boolean is_dead = false;
     //public String cur_tile;
     private static double move_spd;
+    private double npcSpd;
+    private double enemySpd;
     public double xPos;
     public double yPos;
     private double originX; //the origin stuff and dedicated speed is under testing!
     private double originY;
-    private double npcSpd;
     private int xScale = 57;//distance to top right corner of character - temp!
     private int yScale = 86;//distance to bottom left corner of character - temp!
     private int hitboxL = 10; //temp, the hitbox stuff is all currently under testing
@@ -63,13 +67,19 @@ public class GameObject extends JComponent {
         xPos = Double.parseDouble(temp[12]);
         yPos = Double.parseDouble(temp[13]);
 
+        if(Boolean.parseBoolean(temp[14])) {
+            System.out.println("test");
+            interactables.add(this);
+        }
+
         //add this game character to corresponding arraylist
-        switch(character_type){
+        switch(character_type) {
             case 0:
                 players.add(this);
                 break;
             case 1:
                 enemies.add(this);
+                enemySpd = move_spd * 0.5;
                 break;
             case 2:
                 npc.add(this);
@@ -80,7 +90,6 @@ public class GameObject extends JComponent {
                 break;
 
         }
-        GameFrame.addObject(this);
     }
 
     public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id){
@@ -88,6 +97,7 @@ public class GameObject extends JComponent {
         this.damage_type = damage_type;
         this.atk_type = atk_type;
         this.object_id = character_id + "_atk";
+        character_type = 2;
         max_hp = 1;//if we want multiple hits or not
         cur_hp = 1;
         //set position and hitbox here
@@ -114,18 +124,28 @@ public class GameObject extends JComponent {
                 die();
                 break;
             case 1:
-                refreshCD();
-                attack();
-                useAbility();
-                die();
+                //moveForward();
+                //do_damage();
+                trackPlayer(enemySpd);
                 break;
             case 2:
-                moveForward();
-                do_damage();
+                if (atk_type == 1){
+                    cur_action = Action.MOV;
+                    lrMove(npcSpd);
+                }
+                break;
+            case 3:
+                if(object_id.equals("door_in")) {
+                    type = ObjectType.DOOR_IN;
+                } if(object_id.equals("door_out")) {
+                type = ObjectType.DOOR_OUT;
+            }
                 break;
 
         }
     }
+
+
 
     private void moveForward() {
     }
@@ -143,6 +163,26 @@ public class GameObject extends JComponent {
             } else {
                 cur_direction = Direction.LEFT;
             }
+        }
+    }
+
+    private void trackPlayer(double spd){
+        double playerX = players.get(0).xPos;
+        double playerY = players.get(0).yPos;
+        System.out.println(xPos);
+        System.out.println(yPos);
+        if (playerX > xPos - 800){
+            xPos -= spd;
+            System.out.println("aa");
+        } else if (playerX < xPos + 800){
+            xPos += spd;
+            System.out.println("ee");
+        } if (playerY > yPos - 800){
+            yPos -= spd;
+            System.out.println("hks");
+        } else if (playerY < yPos + 800){
+            yPos += spd;
+            System.out.println("asdfkh");
         }
     }
 
@@ -222,6 +262,29 @@ public class GameObject extends JComponent {
         }
     }
 
+    public void interact() {
+        for (GameObject interactable : interactables) {
+            System.out.println(getDistance(interactable, this));
+            if (getDistance(interactable, this) <= 100) {
+                interactable.doInteract();
+            }
+        }
+    }
+
+    private void doInteract() {
+        switch (type) {
+            case DOOR_IN:
+                Setup.curMap = 1;
+                break;
+            case DOOR_OUT:
+                if(Setup.curMap >= 1) Setup.curMap --;
+                break;
+            default:
+                System.out.println("poo poo");
+                break;
+        }
+    }
+
     public void takeDamage(double dmg){
         cur_action = Action.DMG;
         if(cur_hp - dmg >= 0){
@@ -251,9 +314,6 @@ public class GameObject extends JComponent {
         }
     }
 
-    public  void showAbilityAnimation(){
-
-    }
 
     public void showAbilityAnimation(){
 
@@ -337,6 +397,13 @@ public class GameObject extends JComponent {
         return object_id;
     }
 
+    public double getDistance(GameObject x, GameObject y) {
+        System.out.println(x.xPos);
+        System.out.println(x.yPos);
+        System.out.println(y.xPos);
+        System.out.println(y.yPos);
+        return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
+    }
 
     public void setxPos(double x){
         xPos = x;
@@ -349,6 +416,8 @@ public class GameObject extends JComponent {
     public boolean died() {
         return is_dead;
     }
+
+
 
 
 }
