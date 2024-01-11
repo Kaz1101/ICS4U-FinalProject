@@ -68,7 +68,6 @@ public class GameObject extends JComponent {
         yPos = Double.parseDouble(temp[13]);
 
         if(Boolean.parseBoolean(temp[14])) {
-            System.out.println("test");
             interactables.add(this);
         }
 
