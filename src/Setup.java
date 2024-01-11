@@ -18,11 +18,11 @@ public class Setup extends LoadedSprites {
         colMax = new int[mapCount];
         rowMax = new int[mapCount];
         textureData = new String[mapCount][][];
-        for (int i = 0; i < mapCount; i++) {
-            processQueue[i] = new File(mapDir + i + ".csv");
-//            File mapLoose = new File(mapDir.getAbsolutePath() + "loose.csv");
-        }
-//        loose = mapLoose;
+         for (int i = 0; i < mapCount; i++) {
+             processQueue[i] = new File(mapDir + i + ".csv");
+ //            File mapLoose = new File(mapDir.getAbsolutePath() + "loose.csv");
+         }
+       // loose = mapLoose;
         textureDir = textureFolder;
     }
 
