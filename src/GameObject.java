@@ -96,7 +96,7 @@ public class GameObject extends JComponent {
                 }
                 break;
         }
-        GameFrame.addObject(this);
+        //GameFrame.addObject(this);
     }
 
     public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id){
