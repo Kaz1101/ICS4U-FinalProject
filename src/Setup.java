@@ -81,6 +81,7 @@ public class Setup extends LoadedSprites {
             load("data/TestMovementPics/movinggif.gif", "TestDummy", 500, 500);
             load("data/assets/Hongcha1.png", "booperdooper_UP_IDLE", 58, 86);
             load("data/assets/Hongcha.png", "booperdooper_UP_MOV", 58, 86);
+            load("data/assets/Hongcha.png", "booperdooper_UP_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleL.png", "booperdooper_LEFT_IDLE", 58, 86);
             load("data/assets/booperdooper_runL.gif", "booperdooper_LEFT_MOV", 58, 86);
             load("data/assets/Booperdooper.png", "booperdooper_DOWN_IDLE", 58, 86);
