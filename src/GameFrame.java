@@ -17,8 +17,8 @@ public class GameFrame extends JPanel{
         Setup.curMap = 0;
         this.setBackground(Color.black);
         p1 = new GameObject(RWCharacterFile.readInitialFile("booperdooper"));
-        addObject(RWCharacterFile.readInitialFile("door_in"));
         addObject(RWCharacterFile.readInitialFile("enemyTest"));
+        addObject(RWCharacterFile.readInitialFile("door_in"));
         this.revalidate();
         this.repaint();
         this.setVisible(true);
@@ -52,10 +52,10 @@ public class GameFrame extends JPanel{
                 } if (p1.getTile().equals("woodwalldoor")){
                 System.out.println("AAAAAAAAAAAAAAA");
                     Setup.curMap = 1;
-            } if(Main.input.interact) {
-                p1.cur_action = GameObject.Action.INTERACT;
-                p1.interact();
-            }
+                } if(Main.input.interact) {
+                     p1.cur_action = GameObject.Action.INTERACT;
+                     p1.interact();
+                }
                 for (int i = 0; i < game_objects.size(); i++){
                     GameObject obj = game_objects.get(i);
                     obj.cur_action = GameObject.Action.IDLE;

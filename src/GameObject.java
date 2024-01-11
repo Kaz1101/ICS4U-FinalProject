@@ -7,12 +7,12 @@ public class GameObject extends JComponent {
 
 
     private enum Direction {LEFT, RIGHT, UP, DOWN}
-    public enum Action {IDLE, MOV, ATK, DMG, INTERACT}
     private enum ObjectType {PLAYER, NPC, ENEMY, DOOR_IN, DOOR_OUT, INVENTORY}
+    public enum Action {IDLE, MOV, ATK, DMG, INTERACT}
     private static ArrayList<GameObject> players = new ArrayList<>(2);
     private static ArrayList<GameObject> enemies = new ArrayList<>(30);
-    private static ArrayList<GameObject> npc = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
     private static ArrayList<GameObject> interactables = new ArrayList<>(30);
+    private static ArrayList<GameObject> npc = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
     private static int window_width, window_length;
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
     public Action cur_action = Action.IDLE;
@@ -75,20 +75,29 @@ public class GameObject extends JComponent {
         //add this game character to corresponding arraylist
         switch(character_type) {
             case 0:
+                type = ObjectType.PLAYER;
                 players.add(this);
                 break;
             case 1:
+                type = ObjectType.ENEMY;
                 enemies.add(this);
                 enemySpd = move_spd * 0.5;
                 break;
             case 2:
+                type = ObjectType.NPC;
                 npc.add(this);
                 originX = xPos;
                 originY = yPos;
                 npcSpd = move_spd * 0.25;
                 cur_direction = Direction.LEFT;
                 break;
-
+            case 3:
+                if(object_id.equals("door_in.csv")) {
+                    type = ObjectType.DOOR_IN;
+                } if(object_id.equals("door_out")) {
+                    type = ObjectType.DOOR_OUT;
+                }
+                break;
         }
     }
 
@@ -133,13 +142,6 @@ public class GameObject extends JComponent {
                     cur_action = Action.MOV;
                     lrMove(npcSpd);
                 }
-                break;
-            case 3:
-                if(object_id.equals("door_in")) {
-                    type = ObjectType.DOOR_IN;
-                } if(object_id.equals("door_out")) {
-                type = ObjectType.DOOR_OUT;
-            }
                 break;
 
         }
@@ -280,7 +282,7 @@ public class GameObject extends JComponent {
                 if(Setup.curMap >= 1) Setup.curMap --;
                 break;
             default:
-                System.out.println("poo poo");
+            System.out.println("poo poo");
                 break;
         }
     }
@@ -397,13 +399,6 @@ public class GameObject extends JComponent {
         return object_id;
     }
 
-    public double getDistance(GameObject x, GameObject y) {
-        System.out.println(x.xPos);
-        System.out.println(x.yPos);
-        System.out.println(y.xPos);
-        System.out.println(y.yPos);
-        return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
-    }
 
     public void setxPos(double x){
         xPos = x;
@@ -411,6 +406,14 @@ public class GameObject extends JComponent {
 
     public void setyPos(double y){
         yPos = y;
+    }
+
+    public double getDistance(GameObject x, GameObject y) {
+        System.out.println(x.xPos);
+        System.out.println(x.yPos);
+        System.out.println(y.xPos);
+        System.out.println(y.yPos);
+        return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
     public boolean died() {
