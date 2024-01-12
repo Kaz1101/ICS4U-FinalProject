@@ -9,7 +9,9 @@ public class GameFrame extends JPanel{
     GameObject p1;
     GameObject testSubject2;
     private static ArrayList<GameObject> game_objects = new ArrayList<>();
+    private static ArrayList<GameObject> sub_game_objects = new ArrayList<>();
     private boolean game_over = false;
+    private String renderObj;
 
     public GameFrame() throws IOException {
         Main.window.getContentPane().removeAll();
@@ -17,8 +19,10 @@ public class GameFrame extends JPanel{
         Setup.curMap = 0;
         this.setBackground(Color.black);
         p1 = new GameObject(RWCharacterFile.readInitialFile("booperdooper"));
-        addObject(RWCharacterFile.readInitialFile("enemyTest"));
-        addObject(RWCharacterFile.readInitialFile("door_in"));
+        addObject(RWCharacterFile.readInitialFile("npcTest"),0);
+        addObject(RWCharacterFile.readInitialFile("door_in"),0);
+        addObject(RWCharacterFile.readInitialFile("door_out"),1);
+        addObject(RWCharacterFile.readInitialFile("npcHouse"),1);
         this.revalidate();
         this.repaint();
         this.setVisible(true);
@@ -49,18 +53,23 @@ public class GameFrame extends JPanel{
                 }
                 if (Main.input.right) {
                     p1.moveRight();
-                } if (p1.getTile().equals("woodwalldoor")){
-                System.out.println("AAAAAAAAAAAAAAA");
-                    Setup.curMap = 1;
                 } if(Main.input.interact) {
                      p1.cur_action = GameObject.Action.INTERACT;
                      p1.interact();
                 }
-                for (int i = 0; i < game_objects.size(); i++){
-                    GameObject obj = game_objects.get(i);
-                    obj.cur_action = GameObject.Action.IDLE;
-                    obj.doTick();
-                }
+                if (Setup.curMap == 0) {
+                    for (int i = 0; i < game_objects.size(); i++) {
+                        GameObject obj = game_objects.get(i);
+                        obj.cur_action = GameObject.Action.IDLE;
+                        obj.doTick();
+                    }
+                } if (Setup.curMap == 1) {
+                    for (int i = 0; i < sub_game_objects.size(); i++) {
+                        GameObject obj = sub_game_objects.get(i);
+                        obj.cur_action = GameObject.Action.IDLE;
+                        obj.doTick();
+                    }
+            }
 
             if (p1.died()) {
                 game_over = true;
@@ -97,20 +106,17 @@ public class GameFrame extends JPanel{
             }
         } //end of map tile painting
 
-        for (GameObject o : game_objects) {
-
-            //npc stuff painting
-            double paintX = o.xPos - p1.xPos + p1.scrX;
-            double paintY = o.yPos - p1.yPos + p1.scrY;
-
-            if (o.xPos - 200 < p1.xPos + p1.scrX && o.xPos + 200 > p1.xPos - p1.scrX
-                    && o.yPos - 200 < p1.yPos + p1.scrY && o.yPos + 200 > p1.yPos - p1.scrY) {
-                o.drawPlayer(gr, (int) paintX, (int) paintY); // for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
-
+        if (Setup.curMap == 0) {
+            for (GameObject o : game_objects) {
+                o.renderCheck(gr);
+            }
+        } if (Setup.curMap == 1) {
+            for (GameObject o : sub_game_objects) {
+                o.renderCheck(gr);
             }
         }
         //player painting
-        p1.drawPlayer(gr, 0, 0);
+        p1.draw(gr, 0, 0);
         gr.dispose();
 
     }
@@ -119,8 +125,11 @@ public class GameFrame extends JPanel{
      * Creates and adds a character GameObject to the GameObject arraylist
      * @param s a string array that contains information of a character
      */
-    public static void addObject(String[] s){
-        game_objects.add(new GameObject(s));
+    public static void addObject(String[] s, int map) {
+        switch (map) {
+            case 0: game_objects.add(new GameObject(s)); break;
+            case 1: sub_game_objects.add(new GameObject(s)); break;
+        }
     }
 
     /**

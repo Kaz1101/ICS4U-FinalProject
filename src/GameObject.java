@@ -26,12 +26,12 @@ public class GameObject extends JComponent {
     public double yPos;
     private double originX; //the origin stuff and dedicated speed is under testing!
     private double originY;
-    private int xScale = 57;//distance to top right corner of character - temp!
-    private int yScale = 86;//distance to bottom left corner of character - temp!
-    private int hitboxL = 10; //temp, the hitbox stuff is all currently under testing
-    private int hitboxR = xScale - 10;
-    private int hitboxU = yScale - 50;
-    private int hitboxD = yScale;
+    private int xScale;//distance to top right corner of character - temp!
+    private int yScale;//distance to bottom left corner of character - temp!
+    private int hitboxL; //temp, the hitbox stuff is all currently under testing
+    private int hitboxR;
+    private int hitboxU;
+    private int hitboxD;
     private double levelWidth = Setup.colMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
     private double levelHeight = Setup.rowMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
     public int scrX = window_width/2 - xScale/2;
@@ -45,36 +45,69 @@ public class GameObject extends JComponent {
     private long cur_cd, cur_atkcd, last_atkcd; //current cd countdown
     private long cd; //fixed value for this character's ability cd time
     private String ability_name; //we might not need this (update. we need this to read animation)
-    private int character_type; //0 = player, 1 = enemy, 2 = attack
-    private String object_id; //for reading sprite images
     private int ability_range; //range for ability
+    private int character_type; //0 = player, 1 = enemy, 2 = npc, 3 = static object, 4 = attack
+    private String object_id; //for reading sprite images
+    private int npcType;
+    private boolean collected;
 
 //    private ImageIcon still, left, right, move;
 
     public GameObject(String[] temp) {
         character_type = Integer.parseInt(temp[0]);
-        max_hp = Double.parseDouble(temp[1]);
-        cur_hp = Double.parseDouble(temp[2]);
-        atk_dmg = Integer.parseInt(temp[3]);
-        atk_spd = Integer.parseInt(temp[4]);
-        atk_type = Integer.parseInt(temp[5]);
-        ap = Double.parseDouble(temp[6]);
-        cd = Long.parseLong(temp[7]);
-        cur_cd = Long.parseLong(temp[8]);
-        ability_name = temp[9];
-        ability_range = Integer.parseInt(temp[10]);
-        object_id = temp[11];
-        xPos = Double.parseDouble(temp[12]);
-        yPos = Double.parseDouble(temp[13]);
 
-        if(Boolean.parseBoolean(temp[14])) {
-            interactables.add(this);
+        switch (character_type) {
+            case 0, 1 -> {
+                max_hp = Double.parseDouble(temp[1]);
+                cur_hp = Double.parseDouble(temp[2]);
+                atk_dmg = Integer.parseInt(temp[3]);
+                atk_spd = Integer.parseInt(temp[4]);
+                atk_type = Integer.parseInt(temp[5]);
+                ap = Double.parseDouble(temp[6]);
+                cd = Long.parseLong(temp[7]);
+                cur_cd = Long.parseLong(temp[8]);
+                ability_name = temp[9];
+                ability_range = Integer.parseInt(temp[10]);
+                object_id = temp[11];
+                xPos = Double.parseDouble(temp[12]);
+                yPos = Double.parseDouble(temp[13]);
+                xScale = Integer.parseInt(temp[14]);
+                yScale = Integer.parseInt(temp[15]);
+
+                if (Boolean.parseBoolean(temp[16])) {
+                    interactables.add(this);
+                }
+            }
+            case 2 -> {
+                object_id = temp[1];
+                xPos = Double.parseDouble(temp[2]);
+                yPos = Double.parseDouble(temp[3]);
+                xScale = Integer.parseInt(temp[4]);
+                yScale = Integer.parseInt(temp[5]);
+                npcType = Integer.parseInt(temp[6]);
+                if (Boolean.parseBoolean(temp[7])) {
+                    interactables.add(this);
+                }
+            }
+            case 3 -> {
+                object_id = temp[1];
+                xPos = Double.parseDouble(temp[2]);
+                yPos = Double.parseDouble(temp[3]);
+                if (Boolean.parseBoolean(temp[4])) {
+                    interactables.add(this);
+                }
+                collected = Boolean.parseBoolean(temp[5]);
+            }
         }
 
         //add this game character to corresponding arraylist
         switch(character_type) {
             case 0:
                 type = ObjectType.PLAYER;
+                hitboxL = 10; //temp, the hitbox stuff is all currently under testing
+                hitboxR = xScale - 10;
+                hitboxU = yScale - 50;
+                hitboxD = yScale;
                 players.add(this);
                 break;
             case 1:
@@ -88,10 +121,10 @@ public class GameObject extends JComponent {
                 originX = xPos;
                 originY = yPos;
                 npcSpd = move_spd * 0.25;
-                cur_direction = Direction.LEFT;
+                if (npcType == 1) cur_direction = Direction.LEFT;
                 break;
             case 3:
-                if(object_id.equals("door_in.csv")) {
+                if(object_id.equals("door_in")) {
                     type = ObjectType.DOOR_IN;
                 } if(object_id.equals("door_out")) {
                     type = ObjectType.DOOR_OUT;
@@ -137,9 +170,15 @@ public class GameObject extends JComponent {
                 trackPlayer(enemySpd);
                 break;
             case 2:
-                if (atk_type == 1){
-                    cur_action = Action.MOV;
-                    lrMove(npcSpd);
+                switch (npcType) {
+                    case 0:
+                        idle();
+                        break;
+                    case 1:
+                        cur_action = Action.MOV;
+                        lrMove(npcSpd);
+                        break;
+
                 }
                 break;
 
@@ -149,6 +188,19 @@ public class GameObject extends JComponent {
 
 
     private void moveForward() {
+    }
+
+    private int counter = 0;
+    private void idle(){
+        counter ++;
+        if (counter == 100){
+            if (cur_direction == Direction.UP){
+                cur_direction = Direction.DOWN;
+            } else {
+                cur_direction = Direction.UP;
+            }
+            counter = 0;
+        }
     }
 
     private void lrMove(double spd){
@@ -165,6 +217,10 @@ public class GameObject extends JComponent {
                 cur_direction = Direction.LEFT;
             }
         }
+    }
+
+    private void randomMove(double spd){
+
     }
 
     private void trackPlayer(double spd){
@@ -266,8 +322,14 @@ public class GameObject extends JComponent {
     public void interact() {
         for (GameObject interactable : interactables) {
             System.out.println(getDistance(interactable, this));
-            if (getDistance(interactable, this) <= 100) {
-                interactable.doInteract();
+            if (cur_direction == Direction.UP) {
+                if (getDistance(interactable, this) <= 100) {
+                    interactable.doInteract();
+                }
+            } if (cur_direction == Direction.DOWN){
+                if (getDistance(interactable, this) >= 100) {
+                    interactable.doInteract();
+                }
             }
         }
     }
@@ -376,12 +438,28 @@ public class GameObject extends JComponent {
 
     //Movement and attack
 
-    public void drawPlayer(Graphics2D gr, int drawX, int drawY){ //to be draw camera
+    public void draw(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(character_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
             case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
         }
 
+    }
+
+    public void renderCheck(Graphics2D gr){
+        double playerX = players.get(0).xPos;
+        double playerY = players.get(0).yPos;
+        double playerScrX = players.get(0).scrX;
+        double playerScrY = players.get(0).scrY;
+
+        double paintX = xPos - playerX + playerScrX;
+        double paintY = yPos - playerY + playerScrY;
+
+        if (xPos - 200 < playerX + playerScrX && xPos + 200 > playerX - playerScrX
+                && yPos - 200 < playerY + playerScrY && yPos + 200 > playerY - playerScrY) {
+            draw(gr, (int) paintX, (int) paintY); // for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
+
+        }
     }
 
     /**
