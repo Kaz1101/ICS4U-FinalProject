@@ -439,7 +439,9 @@ public class GameObject extends JComponent {
         }
         return false;
     }
-
+/**Writen by Graham, edited by Luka
+*getting objects inrange and then triggering the dointeract() function
+*/
     public void interact() {
         for (GameObject interactable : interactables) {
             System.out.println(getDistance(interactable, this));
@@ -454,7 +456,9 @@ public class GameObject extends JComponent {
             }
         }
     }
-
+/**Writen by Graham
+*completing object specific interactions depending on object type
+*/
     private void doInteract() {
         switch (type) {
             case DOOR_IN:
@@ -606,7 +610,9 @@ public class GameObject extends JComponent {
     public void setyPos(double y){
         yPos = y;
     }
-
+/**Writen by Graham
+*checking distance between objects for interactions and other things
+*/
     public double getDistance(GameObject x, GameObject y) {
         System.out.println(x.xPos);
         System.out.println(x.yPos);
