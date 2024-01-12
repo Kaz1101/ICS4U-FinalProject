@@ -313,7 +313,7 @@ public class GameObject extends JComponent {
             //if(!characterCollision()) {
                 yPos -= move_spd;
             //} else {
-                yPos += move_spd;
+                //yPos += move_spd;
             //}
         }
     }
@@ -325,7 +325,7 @@ public class GameObject extends JComponent {
             //if(!characterCollision()) {
                 yPos += move_spd;
             //} else {
-                yPos -= move_spd;
+                //yPos -= move_spd;
            // }
         }
     }
@@ -351,7 +351,7 @@ public class GameObject extends JComponent {
                 //if(!characterCollision()) {
                     xPos += move_spd;
                 //} else {
-                    xPos -= move_spd;
+                   // xPos -= move_spd;
                 //}
             }
         }
