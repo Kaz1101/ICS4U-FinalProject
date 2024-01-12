@@ -37,19 +37,19 @@ public class KeyInput implements KeyListener {
 //                        System.out.println("right");
                         right = true;
                         break;
-                    case KeyEvent.VK_KP_UP:
+                    case KeyEvent.VK_UP:
                         System.out.println("atk up");
                         atk_up = true;
                         break;
-                    case KeyEvent.VK_KP_LEFT:
+                    case KeyEvent.VK_LEFT:
                         System.out.println("atk left");
                         atk_left = true;
                         break;
-                    case KeyEvent.VK_KP_DOWN:
+                    case KeyEvent.VK_DOWN:
                         System.out.println("atk down");
                         atk_down = true;
                         break;
-                    case KeyEvent.VK_KP_RIGHT:
+                    case KeyEvent.VK_RIGHT:
                         System.out.println("atk right");
                         atk_right = true;
                         break;
@@ -83,19 +83,19 @@ public class KeyInput implements KeyListener {
                     right = false;
 //                    System.out.println("stop");
                     break;
-                case KeyEvent.VK_KP_UP:
+                case KeyEvent.VK_UP:
                     System.out.println("atk up");
                     atk_up = false;
                     break;
-                case KeyEvent.VK_KP_LEFT:
+                case KeyEvent.VK_LEFT:
                     System.out.println("atk left");
                     atk_left = false;
                     break;
-                case KeyEvent.VK_KP_DOWN:
+                case KeyEvent.VK_DOWN:
                     System.out.println("atk down");
                     atk_down = false;
                     break;
-                case KeyEvent.VK_KP_RIGHT:
+                case KeyEvent.VK_RIGHT:
                     System.out.println("atk right");
                     atk_right = false;
                     break;

@@ -12,7 +12,7 @@ public class GameObject extends JComponent {
     private static ArrayList<GameObject> players = new ArrayList<>(2);
     private static ArrayList<GameObject> enemies = new ArrayList<>(30);
     private static ArrayList<GameObject> interactables = new ArrayList<>(30);
-    private static ArrayList<GameObject> npc = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
+    private static ArrayList<GameObject> npcs = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
     private static int window_width, window_length;
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
     public Action cur_action = Action.IDLE;
@@ -117,7 +117,7 @@ public class GameObject extends JComponent {
                 break;
             case 2:
                 type = ObjectType.NPC;
-                npc.add(this);
+                npcs.add(this);
                 originX = xPos;
                 originY = yPos;
                 npcSpd = move_spd * 0.25;
@@ -137,12 +137,14 @@ public class GameObject extends JComponent {
         this.atk_dmg = atk_dmg;
         this.damage_type = damage_type;
         this.atk_type = atk_type;
-        this.object_id = character_id + "_atk";
+        this.object_id = character_id;
         this.xPos = xPos;
         this.yPos = yPos - 20;
         character_type = 4;
         max_hp = 1;//if we want multiple hits or not
         cur_hp = 1;
+        xScale = 50;
+        yScale = 50;
         switch(dir){
             case "u": cur_direction = Direction.UP; break;
             case "d": cur_direction = Direction.DOWN; break;
@@ -200,11 +202,9 @@ public class GameObject extends JComponent {
 
 
     private void kill() {
-        for(GameObject player : players){
-            if(Math.abs(this.xPos - player.xPos) > (double) window_width / 2 + 300){
-                cur_hp -= max_hp;
-                die();
-            }
+        if(getDistance(this, players.get(0)) > scrX * 2){
+            cur_hp -= max_hp;
+            die();
         }
     }
 
@@ -275,20 +275,18 @@ public class GameObject extends JComponent {
         switch(damage_type){
             case 1:
                 for(GameObject enemy : enemies){
-                    if(this.getBounds().intersects(enemy.getBounds())){
+                    if(getDistance(this, enemy) < 1){
                         enemy.takeDamage(atk_dmg);
-                        cur_hp -= 1;
+                        kill();
                     }
-                    die();
                 }
                 break;
             case -1:
                 for(GameObject player : players){
                     if(touches(player)){
                         player.takeDamage(atk_dmg);
-                        cur_hp -= 1;
+                        kill();
                     }
-                    die();
                 }
         }
     }
@@ -358,7 +356,8 @@ public class GameObject extends JComponent {
     }
 
     public void attack(String dir){
-        if (cur_atkcd > atk_spd / 1000 && withinAttackRange()) {
+        cur_atkcd = System.currentTimeMillis() - last_atkcd;
+        if (cur_atkcd / 1000 > atk_spd) {
             switch (dir) {
                 case "U":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
@@ -383,8 +382,6 @@ public class GameObject extends JComponent {
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
         switch(character_type) {
-            //case 0:
-
             case 1:
                 if (cur_atkcd > atk_spd / 1000 && withinAttackRange()) {
                     switch (cur_direction) {
@@ -416,29 +413,29 @@ public class GameObject extends JComponent {
                 case -1: atk_range = 50; break;
                 case 1: atk_range = 500; break;
             }
-            switch (cur_direction) {
-                case UP:
-                    if (yPos - player.yPos <= atk_range) {
-                        return true;
-                    }
-                    break;
-                case DOWN:
-                    if(player.yPos - yPos <= atk_range){
-                        return true;
-                    }
-                    break;
-                case LEFT:
-                    if(xPos - player.xPos <= atk_range){
-                        return true;
-                    }
-                    break;
-                case RIGHT:
-                    if(player.xPos - xPos <= atk_range){
-                        return true;
-                    }
-                    break;
-            }
-            return false;
+            return getDistance(this, player) < atk_range;
+//            switch (cur_direction) {
+//                case UP:
+//                    if (yPos - player.yPos <= atk_range) {
+//                        return true;
+//                    }
+//                    break;
+//                case DOWN:
+//                    if(player.yPos - yPos <= atk_range){
+//                        return true;
+//                    }
+//                    break;
+//                case LEFT:
+//                    if(xPos - player.xPos <= atk_range){
+//                        return true;
+//                    }
+//                    break;
+//                case RIGHT:
+//                    if(player.xPos - xPos <= atk_range){
+//                        return true;
+//                    }
+//                    break;
+//            }
         }
         return false;
     }

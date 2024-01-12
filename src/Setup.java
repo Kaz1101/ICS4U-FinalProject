@@ -93,6 +93,7 @@ public class Setup extends LoadedSprites {
             load("data/assets/booperdooper_runL.gif", "npc1_LEFT_MOV", 200, 200);
             load("data/assets/Dogepro.png", "npcHouse_UP_IDLE", 200,200);
             load("data/assets/Dogepro1.png", "npcHouse_DOWN_IDLE", 200,200);
+            load("data/assets/booperdooper_attack.png", "booperdooper_attack", 100, 100);
             loadMapTextures();
         } catch (IOException e) {
             throw new RuntimeException(e);

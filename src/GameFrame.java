@@ -80,6 +80,9 @@ public class GameFrame extends JPanel{
                         GameObject obj = game_objects.get(i);
                         obj.cur_action = GameObject.Action.IDLE;
                         obj.doTick();
+                        if(obj.died()){
+                            game_objects.remove(obj);
+                        }
                     }
                 } if (Setup.curMap == 1) {
                     for (int i = 0; i < sub_game_objects.size(); i++) {
