@@ -66,12 +66,7 @@ public class GameFrame extends JPanel{
                 if(Main.input.atk_right){
                     p1.attack("R");
                 }
-
-
-                if (p1.getTile().equals("woodwalldoor")){
-                System.out.println("AAAAAAAAAAAAAAA");
-                    Setup.curMap = 1;
-                } if(Main.input.interact) {
+                if(Main.input.interact) {
                      p1.cur_action = GameObject.Action.INTERACT;
                      p1.interact();
                 }
