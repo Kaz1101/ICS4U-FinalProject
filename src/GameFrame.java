@@ -7,22 +7,21 @@ import java.util.ArrayList;
 
 public class GameFrame extends JPanel{
     GameObject p1;
-    GameObject testSubject2;
     private static ArrayList<GameObject> game_objects = new ArrayList<>();
     private static ArrayList<GameObject> sub_game_objects = new ArrayList<>();
     private boolean game_over = false;
-    private String renderObj;
 
+    /**
+     * Refreshes window to now initialize and display the game with any necessary objects
+     * @throws IOException
+     */
     public GameFrame() throws IOException {
         Main.window.getContentPane().removeAll();
         Main.window.add(this);
         Setup.curMap = 0;
         this.setBackground(Color.black);
-        p1 = new GameObject(RWCharacterFile.readInitialFile("booperdooper"));
-        addObject(RWCharacterFile.readInitialFile("npcTest"),0);
-        addObject(RWCharacterFile.readInitialFile("door_in"),0);
-        addObject(RWCharacterFile.readInitialFile("door_out"),1);
-        addObject(RWCharacterFile.readInitialFile("npcHouse"),1);
+        p1 = new GameObject(RWFile.readInitialFile("booperdooper"));
+        loadLooseObj();
         this.revalidate();
         this.repaint();
         this.setVisible(true);
@@ -32,13 +31,14 @@ public class GameFrame extends JPanel{
     }
 
 
+    /**
+     * Written by Luka, with things added by Graham and Christina
+     * Game loop
+     * Runs through every 10 msec and performs appropriate actions
+     */
     Timer tick = new Timer(10, new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-
-            //for collision: keep track of what tile the character is on, only call movement if character is not on said tile?
-//            System.out.println(testSubject1.getTile());
-//              testSubject1.collisionCheck();
                 if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
                     p1.cur_action = GameObject.Action.IDLE;
                 }
@@ -66,8 +66,8 @@ public class GameFrame extends JPanel{
                 } if (Setup.curMap == 1) {
                     for (int i = 0; i < sub_game_objects.size(); i++) {
                         GameObject obj = sub_game_objects.get(i);
-                        obj.cur_action = GameObject.Action.IDLE;
                         obj.doTick();
+//                        obj.cur_action = GameObject.Action.IDLE;
                     }
             }
 
@@ -77,11 +77,18 @@ public class GameFrame extends JPanel{
             repaint();
         }
     });
+
+    /**
+     * Written by Luka
+     * The thing that controlls graphics and draws everything on screen
+     * Houses the map painting functions and calculations (only paints within a certain distance around players for efficient painting)
+     * Sends Graphics component to respective GameObject methods that require them to draw objects and player
+     * @param g the <code>Graphics</code> object to protect
+     */
     @Override
     public void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D gr = (Graphics2D)g;
-
 
         //for map tiles
         int col = 0;
@@ -147,4 +154,17 @@ public class GameFrame extends JPanel{
         game_objects.remove(o);
     }
 
+    /**
+     * Written by Luka
+     * Takes objects to be initialized from a csv, then initializes them and adds them to the GameObject arrays
+     * @throws IOException
+     */
+    private void loadLooseObj() throws IOException {
+        String[] loose = RWFile.readGeneral("data/objectData/objectList");
+        for (int i = 0; i < loose.length - 1; i += 2){
+            addObject(RWFile.readInitialFile(loose[i]), Integer.parseInt(loose[i+1]));
+        }
+    }
 }
+
+

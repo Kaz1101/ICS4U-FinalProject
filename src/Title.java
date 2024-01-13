@@ -5,6 +5,10 @@ import java.io.IOException;
 
 public class Title {
 
+    /**
+     * Written by Luka
+     * sets up window, displays title screen (or the current lack thereof)
+     */
     public Title(){
         Main.gameState = Main.GameState.TITLE;
         Main.input = new KeyInput();
@@ -18,6 +22,12 @@ public class Title {
         tick.start();
         Main.window.setVisible(true);
     }
+
+    /**
+     * Written by Luka
+     * Basic Swing timer that currently does almost nothing except stop itself and create a game frame when the game is started
+     * This is for future us when we make an actual title screen
+     */
     Timer tick = new Timer(10, new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -33,6 +43,4 @@ public class Title {
             }
         }
     });
-
-    //can add draw class (if everything goes to plan)
 }

@@ -5,6 +5,10 @@ public class KeyInput implements KeyListener {
 
     public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, start, interact;
 
+    /**
+     * Written by Luka (things were added by both Christina and Graham)
+     * @param e the event to be processed
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         switch (Main.gameState) {
@@ -63,6 +67,10 @@ public class KeyInput implements KeyListener {
     }
 
 
+    /**
+     * Written by Luka (things were added by both Christina and Graham)
+     * @param e the event to be processed
+     */
     @Override
     public void keyReleased(KeyEvent e) {
         if (Main.gameState == Main.GameState.PLAY) {

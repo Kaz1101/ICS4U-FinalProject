@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 
-public class RWCharacterFile {
+public class RWFile {
 
     /**
      * Reading csv of initial character data file and returns as array
@@ -10,7 +10,12 @@ public class RWCharacterFile {
      * @throws IOException if file is not found
      */
     public static String[] readInitialFile(String characterID) throws IOException{
-        BufferedReader read = new BufferedReader(new FileReader("data/characterData/" + characterID + ".csv"));
+        BufferedReader read = new BufferedReader(new FileReader("data/objectData/" + characterID + ".csv"));
+        return read.readLine().split(",");
+    }
+
+    public static String[] readGeneral(String fileDir) throws IOException{
+        BufferedReader read = new BufferedReader(new FileReader(fileDir + ".csv"));
         return read.readLine().split(",");
     }
 
@@ -45,7 +50,7 @@ public class RWCharacterFile {
 
     public ArrayList<String> readData(GameObject character) {
         String name = character.getObjectID();
-        File f = new File("data/savedData/" + name + ".csv");
+        File f = new File("data/saveData/" + name + ".csv");
         ArrayList<String> saveData = new ArrayList<>();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(f));

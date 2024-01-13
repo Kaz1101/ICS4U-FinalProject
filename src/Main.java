@@ -11,6 +11,12 @@ public class Main {
     public static int y = (int)screenSize.getHeight();
     public int ScaleFactor = (int)Math.sqrt(x*x + y*y) / 10;
 
+    /**
+     * Written by Luka
+     * Starts up the program
+     * Loads required assets and creates a title window
+     * @param args
+     */
     public static void main(String[] args) {
         Setup setup = new Setup("data/map/", "data/assets/", 2);
         setup.load();

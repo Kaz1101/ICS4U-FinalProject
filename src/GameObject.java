@@ -4,8 +4,6 @@ import java.util.*;
 
 
 public class GameObject extends JComponent {
-
-
     private enum Direction {LEFT, RIGHT, UP, DOWN}
     private enum ObjectType {PLAYER, NPC, ENEMY, DOOR_IN, DOOR_OUT, INVENTORY}
     public enum Action {IDLE, MOV, ATK, DMG, INTERACT}
@@ -51,8 +49,12 @@ public class GameObject extends JComponent {
     private int npcType;
     private boolean collected;
 
-//    private ImageIcon still, left, right, move;
 
+    /**
+     * Written by Christina, adjusted/edited by Luka
+     * Sets up and initializes variables based on object data given from a csv file
+     * @param temp a String array consisting of data for specific object being loaded
+     */
     public GameObject(String[] temp) {
         character_type = Integer.parseInt(temp[0]);
 
@@ -178,6 +180,9 @@ public class GameObject extends JComponent {
                         cur_action = Action.MOV;
                         lrMove(npcSpd);
                         break;
+                    case 2:
+                        randomMove();
+                        break;
 
                 }
                 break;
@@ -190,6 +195,10 @@ public class GameObject extends JComponent {
     private void moveForward() {
     }
 
+    /**
+     * Written by Luka
+     * Basic code for idle npcs where they move slightly every approx 1 sec
+     */
     private int counter = 0;
     private void idle(){
         counter ++;
@@ -203,6 +212,11 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Written by Luka
+     * Basic code that makes npcs move back and forth
+     * @param spd the npc's speed (quarter of player speed)
+     */
     private void lrMove(double spd){
         if (cur_direction == Direction.LEFT){
             if (xPos >= originX - 400) {
@@ -219,10 +233,31 @@ public class GameObject extends JComponent {
         }
     }
 
-    private void randomMove(double spd){
-
+    Random r = new Random();
+    int moveTimer = 0;
+    //Written by Luka, beginnings of a random motion class for npc's
+    private void randomMove(){
+        int move = r.nextInt(100) + 1;
+        if (move <= 75 && moveTimer == 50) {
+            int motion = r.nextInt(4) + 1;
+            if (motion == 1) {
+                moveLeft();
+            }
+            if (motion == 2) {
+                moveRight();
+            }
+            if (motion == 3) {
+                moveUp();
+            }
+            if (motion == 4) {
+                moveDown();
+            }
+            moveTimer = 0;
+        }
+        moveTimer ++;
     }
 
+    //Written by Luka, does not currently work - likely would be put in a different class
     private void trackPlayer(double spd){
         double playerX = players.get(0).xPos;
         double playerY = players.get(0).yPos;
@@ -242,6 +277,7 @@ public class GameObject extends JComponent {
             System.out.println("asdfkh");
         }
     }
+
 
     private void do_damage() {
         switch(damage_type){
@@ -265,14 +301,17 @@ public class GameObject extends JComponent {
         }
     }
 
+
     private void die() {
         if(cur_hp <= 0){
             is_dead = true;
         }
     }
 
+
+    //Movement methods created by Christina(?) and edited by Luka
     /**
-     * Checks for current y position, if within boarders from the top, moves up.
+     * Checks for current y position, if within map boarders from the top and is not moving into an object with collision, moves up.
      */
     public void moveUp(){
         cur_direction = Direction.UP;
@@ -281,7 +320,9 @@ public class GameObject extends JComponent {
             yPos -= move_spd;
         }
     }
-
+    /**
+     * Checks for current y position, if within boarders from the bottom and is not moving into an object with collision, moves up.
+     */
     public void moveDown(){
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
@@ -291,7 +332,7 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * Checks for current x position, if within boarders from the left side, moves left.
+     * Checks for current x position, if within boarders from the left side and is not moving into an object with collision, moves left.
      */
     public void moveLeft(){
         cur_direction = Direction.LEFT;
@@ -301,7 +342,7 @@ public class GameObject extends JComponent {
         }
     }
     /**
-     * Checks for current x position, if within boarders from the right side, moves right.
+     * Checks for current x position, if within boarders from the right side and is not moving into an object with collision, moves right.
      */
     public void moveRight(){
         cur_direction = Direction.RIGHT;
@@ -310,6 +351,7 @@ public class GameObject extends JComponent {
             xPos += move_spd;
         }
     }
+
 
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
@@ -388,11 +430,14 @@ public class GameObject extends JComponent {
     }
 
 
-
+    /**
+     * Written by Luka
+     * Find the tile the player is currently on, as of now only used for testing and debugging
+     * @return the tile type the player is on
+     */
     public String getTile(){
         int x = 0;
         int y = 0;
-
 
         if (cur_direction == Direction.LEFT || cur_direction == Direction.UP) {
             x = (int) xPos / 100;
@@ -406,13 +451,16 @@ public class GameObject extends JComponent {
         }
 //        System.out.println("[" + x + "," + y + "]");
         return Setup.textureData[Setup.curMap][y][x];
-        //should create a tile collision checker so we dont have to manually input which tiles are solid
     }
 
+    /**
+     * Written by Luka
+     * Checks for tile in front of player to see if it has collision or not
+     * @return the collision status of tile in front of player
+     */
     public boolean collisionCheck(){
         int toTouch;
 
-        //create boolean collision 2d array
         switch (cur_direction){
             case UP -> {
                 toTouch = (int) (yPos + hitboxU - move_spd) / 100;
@@ -436,8 +484,13 @@ public class GameObject extends JComponent {
     }
 
 
-    //Movement and attack
-
+    /**
+     * Written by Luka
+     * Draws any on-screen objects including the player
+     * @param gr Graphics2D component passed from paintComponent
+     * @param drawX x position of non-player objects on map
+     * @param drawY y position of non-player objects on map
+     */
     public void draw(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(character_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
@@ -446,6 +499,11 @@ public class GameObject extends JComponent {
 
     }
 
+    /**
+     * Written by Luka
+     * Checks to see if object is within visible bounds of screen
+     * @param gr Graphics2d component passed from paintComponent - to be passed to "draw" method
+     */
     public void renderCheck(Graphics2D gr){
         double playerX = players.get(0).xPos;
         double playerY = players.get(0).yPos;
@@ -496,7 +554,6 @@ public class GameObject extends JComponent {
     public boolean died() {
         return is_dead;
     }
-
 
 
 

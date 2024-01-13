@@ -13,6 +13,13 @@ public class Setup extends LoadedSprites {
     public static int[] rowMax;
     private File[] processQueue;
 
+    /**
+     * Originally written by Graham, adjusted and implemented by Luka
+     * Queues up map components to be read
+     * @param mapDir directory of map
+     * @param textureFolder directory of texture folder
+     * @param mapCount number of maps to read
+     */
     public Setup(String mapDir, String textureFolder, int mapCount){
         processQueue = new File[mapCount];
         colMax = new int[mapCount];
@@ -31,6 +38,11 @@ public class Setup extends LoadedSprites {
     private final int scaleX = 100;
     private final int scaleY = 100;
 
+    /**
+     * Written by Graham, edited by Luka
+     * Loads all required map textures
+     * @throws IOException
+     */
     public void loadMapTextures() throws IOException {
         for (int a = 0; a < processQueue.length; a++) {
             ArrayList<String[]> textData = new ArrayList<>();
@@ -54,11 +66,21 @@ public class Setup extends LoadedSprites {
         collisionTiles();
     }
 
+    /**
+     * Written by Luka
+     * Reads csv that contains tile types that have collision
+     * @throws IOException
+     */
     public void collisionTiles() throws IOException{
         BufferedReader read = new BufferedReader(new FileReader("data/map/collisionTiles.csv"));
          mapCollision(read.readLine().split(","));
     }
 
+    /**
+     * Written by Luka
+     * Creates a duplicate world map that houses collision booleans rather than texture names
+     * @param collision Array of tile types with collision
+     */
     private void mapCollision(String[] collision){
         collisionData = new boolean[textureData.length][textureData[0].length][textureData[0][0].length];
         for (int a = 0; a < textureData.length; a++) {
@@ -76,6 +98,10 @@ public class Setup extends LoadedSprites {
     }
 
 
+    /**
+     * Written by Luka
+     * Loads object sprites - these will change as more sprites are completed
+     */
     public void load(){
         try {
             load("data/TestMovementPics/movinggif.gif", "TestDummy", 500, 500);
@@ -89,10 +115,19 @@ public class Setup extends LoadedSprites {
             load("data/assets/Booperdooper1.png", "booperdooper_DOWN_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleR.png", "booperdooper_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "booperdooper_RIGHT_MOV", 58, 86);
+
             load("data/assets/booperdooper_runR.gif", "npc1_RIGHT_MOV", 200, 200);
             load("data/assets/booperdooper_runL.gif", "npc1_LEFT_MOV", 200, 200);
             load("data/assets/Dogepro.png", "npcHouse_UP_IDLE", 200,200);
             load("data/assets/Dogepro1.png", "npcHouse_DOWN_IDLE", 200,200);
+            load("data/assets/Hongcha1.png", "npc2_UP_IDLE", 58, 86);
+            load("data/assets/Hongcha.png", "npc2_UP_MOV", 58, 86);
+            load("data/assets/booperdooper_idleL.png", "npc2_LEFT_IDLE", 58, 86);
+            load("data/assets/booperdooper_runL.gif", "npc2_LEFT_MOV", 58, 86);
+            load("data/assets/Booperdooper.png", "npc2_DOWN_IDLE", 58, 86);
+            load("data/assets/Booperdooper1.png", "npc2_DOWN_MOV", 58, 86);
+            load("data/assets/booperdooper_idleR.png", "npc2_RIGHT_IDLE", 58, 86);
+            load("data/assets/booperdooper_runR.gif", "npc2_RIGHT_MOV", 58, 86);
             loadMapTextures();
         } catch (IOException e) {
             throw new RuntimeException(e);
