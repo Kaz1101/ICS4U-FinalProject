@@ -3,7 +3,7 @@ import java.util.*;
 
 public class RWFile {
 
-    /**
+    /**Writen by Graham edited by Luka
      * Reading csv of initial character data file and returns as array
      * @param characterID a specific character ID that identifies which character's file to search for
      * @return a String array of data that contains data of a GameCharacter object
@@ -32,7 +32,7 @@ public class RWFile {
 
 	 */
 
-    /**
+    /**Writen by Graham edited by Luka
      * Write the current state of the GameCharacter object into a csv file
      * @param character a GameCharacter object that we want to save the character file for
      */

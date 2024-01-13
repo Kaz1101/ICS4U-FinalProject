@@ -6,8 +6,10 @@ import java.io.FileWriter;
 import javax.imageio.ImageIO;
 import java.util.Scanner;
 import java.util.ArrayList;
-
 public class Main {
+	/**Writen by Graham
+	*takes @param directory then loads the png, gets the per pixel colour data and adds it : sperated to a 2d String[][] and @returns rgbArr
+	*/
 	public static String[][] imgToRGBArray(String directory) throws IOException {
 		BufferedImage temp = ImageIO.read(new File(directory));
 		String[][] rgbArr = new String[temp.getHeight()][temp.getWidth()];
@@ -20,6 +22,9 @@ public class Main {
 		}
 		return rgbArr;
 	}
+	/**Writen by Graham
+	*takes @param directory then loads the csv in to @return out String[][] with data
+	*/
 	public static String[][] importColorCompair(String directory) {
 		File temp = new File(directory);
 		ArrayList<String[]> list = new ArrayList<String[]>();
@@ -34,6 +39,9 @@ public class Main {
 		String[][] out = list.toArray(new String[0][0]);
 		return out;
 	}
+	/**Writen by Graham
+	*takes @param rgbArr and compairs it to @param colorChart and replaces matches with specified names and @returns amp with updated data
+	*/
 	public static String[][] rgbArrayToMap(String[][] colorChart, String[][] rgbArr) {
 		String[][] output = rgbArr;
 		for (int i = 0; i < rgbArr.length; i++) {
@@ -51,6 +59,9 @@ public class Main {
 		}
 		return output;
 	}
+	/**Writen by Graham
+	*outputs @param map as a .CSV fiile
+	*/
 	public static void outputToCSV(String[][] map) throws IOException {
 		FileWriter output = new FileWriter(new File("data/map/output.csv"));
 		for (int i = 0; i < map.length; i++) {
@@ -64,6 +75,9 @@ public class Main {
 		System.out.println();
 		output.close();
 	}
+	/**Writen by Graham
+	*Main control method that bring everything together
+	*/
 	public static void main(String[] args) throws IOException {
 		Scanner input = new Scanner(System.in);
 		System.out.println("paste in image directory");

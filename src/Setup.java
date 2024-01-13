@@ -99,7 +99,6 @@ public class Setup extends LoadedSprites {
 
 
     /**
-     * Written by Luka
      * Loads object sprites - these will change as more sprites are completed
      */
     public void load(){
@@ -115,6 +114,7 @@ public class Setup extends LoadedSprites {
             load("data/assets/Booperdooper1.png", "booperdooper_DOWN_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleR.png", "booperdooper_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "booperdooper_RIGHT_MOV", 58, 86);
+            load("data/assets/booperdooper_attack.png", "booperdooper_attack", 100, 100);
 
             load("data/assets/booperdooper_runR.gif", "npc1_RIGHT_MOV", 200, 200);
             load("data/assets/booperdooper_runL.gif", "npc1_LEFT_MOV", 200, 200);

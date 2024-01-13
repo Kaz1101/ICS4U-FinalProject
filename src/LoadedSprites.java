@@ -11,7 +11,7 @@ public class LoadedSprites {
     protected static Image[] textures;
     protected static String[] NameID;
 
-    /**
+    /**Writen by Graham edited by Luka
      * Takes assets and adds it to a temporary arraylist
      * @param textureDir Directory of asset
      * @param textureName Name of asset
@@ -30,7 +30,7 @@ public class LoadedSprites {
 //		tempS.flush();
     }
 
-    /**
+    /**Writen by Graham edited by Luka
      * Converts temporary array list into two definitive arrays to be called by other classes; one for the assets, and the other for asset name
      */
     public void finishLoading() {
@@ -41,7 +41,7 @@ public class LoadedSprites {
     }
 
 
-    /**
+    /**Writen by Graham edited by Luka
      * Clears asset arrays
      */
     public static void clearLoaded() {
@@ -49,8 +49,7 @@ public class LoadedSprites {
         NameID = new String[0];
     }
 
-    /**
-     *
+    /**Writen by Graham edited by Luka
      * @param texture name of texture to be pulled
      * @return the pulled texture
      */

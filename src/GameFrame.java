@@ -53,6 +53,24 @@ public class GameFrame extends JPanel{
                 }
                 if (Main.input.right) {
                     p1.moveRight();
+                }
+                if(Main.input.atk_up){
+                    p1.attack("U");
+                }
+                if(Main.input.atk_down){
+                    p1.attack("D");
+                }
+                if(Main.input.atk_left){
+                    p1.attack("L");
+                }
+                if(Main.input.atk_right){
+                    p1.attack("R");
+                }
+
+
+                if (p1.getTile().equals("woodwalldoor")){
+                System.out.println("AAAAAAAAAAAAAAA");
+                    Setup.curMap = 1;
                 } if(Main.input.interact) {
                      p1.cur_action = GameObject.Action.INTERACT;
                      p1.interact();
@@ -62,6 +80,9 @@ public class GameFrame extends JPanel{
                         GameObject obj = game_objects.get(i);
                         obj.cur_action = GameObject.Action.IDLE;
                         obj.doTick();
+                        if(obj.died()){
+                            game_objects.remove(obj);
+                        }
                     }
                 } if (Setup.curMap == 1) {
                     for (int i = 0; i < sub_game_objects.size(); i++) {
@@ -70,6 +91,8 @@ public class GameFrame extends JPanel{
 //                        obj.cur_action = GameObject.Action.IDLE;
                     }
             }
+
+
 
             if (p1.died()) {
                 game_over = true;
@@ -146,8 +169,8 @@ public class GameFrame extends JPanel{
      * @param atk_type ranged or melee attack
      * @param character_id which character's attack animation to pull
      */
-    public static void addObject(int atk_dmg, int damage_type, int atk_type, String character_id){
-        game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id));
+    public static void addObject(int atk_dmg, int damage_type, int atk_type, String character_id, double x, double y, String d){
+        game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id, x, y, d));
     }
 
     public static void removeObject(GameObject o){

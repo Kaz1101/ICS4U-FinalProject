@@ -49,6 +49,7 @@ public class GameObject extends JComponent {
     private int npcType;
     private boolean collected;
 
+//    private ImageIcon still, left, right, move;
 
     /**
      * Written by Christina, adjusted/edited by Luka
@@ -135,14 +136,24 @@ public class GameObject extends JComponent {
         }
     }
 
-    public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id){
+    public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id, double xPos, double yPos, String dir){
         this.atk_dmg = atk_dmg;
         this.damage_type = damage_type;
         this.atk_type = atk_type;
-        this.object_id = character_id + "_atk";
-        character_type = 2;
+        this.object_id = character_id;
+        this.xPos = xPos;
+        this.yPos = yPos - 20;
+        character_type = 4;
         max_hp = 1;//if we want multiple hits or not
         cur_hp = 1;
+        xScale = 50;
+        yScale = 50;
+        switch(dir){
+            case "u": cur_direction = Direction.UP; break;
+            case "d": cur_direction = Direction.DOWN; break;
+            case "l": cur_direction = Direction.LEFT; break;
+            case "r": cur_direction = Direction.RIGHT; break;
+        }
         //set position and hitbox here
     }
 
@@ -186,13 +197,31 @@ public class GameObject extends JComponent {
 
                 }
                 break;
+            case 4:
+                moveForward();
+                do_damage();
+                kill();
+                break;
 
         }
     }
 
 
 
+    private void kill() {
+        if(getDistance(this, players.get(0)) > scrX * 2){
+            cur_hp -= max_hp;
+            die();
+        }
+    }
+
     private void moveForward() {
+        switch(cur_direction){
+            case UP: moveUp(); break;
+            case DOWN: moveDown(); break;
+            case LEFT: moveLeft(); break;
+            case RIGHT: moveRight(); break;
+        }
     }
 
     /**
@@ -278,29 +307,29 @@ public class GameObject extends JComponent {
         }
     }
 
-
     private void do_damage() {
         switch(damage_type){
             case 1:
                 for(GameObject enemy : enemies){
-                    if(this.getBounds().intersects(enemy.getBounds())){
+                    if(getDistance(this, enemy) < 1){
                         enemy.takeDamage(atk_dmg);
-                        cur_hp -= 1;
+                        kill();
                     }
-                    die();
                 }
                 break;
             case -1:
                 for(GameObject player : players){
-                    if(this.getBounds().intersects(player.getBounds())){
+                    if(touches(player)){
                         player.takeDamage(atk_dmg);
-                        cur_hp -= 1;
+                        kill();
                     }
-                    die();
                 }
         }
     }
 
+    private boolean touches(GameObject o) {
+        return this.getBounds().intersects(o.getBounds());
+    }
 
     private void die() {
         if(cur_hp <= 0){
@@ -317,7 +346,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.UP;
         cur_action = Action.MOV;
         if(yPos - move_spd > 0 && collisionCheck()){
-            yPos -= move_spd;
+            //if(!characterCollision()) {
+                yPos -= move_spd;
+            //} else {
+                //yPos += move_spd;
+            //}
         }
     }
     /**
@@ -327,7 +360,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
         if(yPos + yScale + move_spd < levelHeight && collisionCheck()){
-            yPos += move_spd;
+            //if(!characterCollision()) {
+                yPos += move_spd;
+            //} else {
+                //yPos -= move_spd;
+           // }
         }
     }
 
@@ -348,19 +385,104 @@ public class GameObject extends JComponent {
         cur_direction = Direction.RIGHT;
         cur_action = Action.MOV;
         if(xPos + xScale + move_spd < levelWidth && collisionCheck()){
-            xPos += move_spd;
+            if(xPos - move_spd > 0 && collisionCheck()){
+                //if(!characterCollision()) {
+                    xPos += move_spd;
+                //} else {
+                   // xPos -= move_spd;
+                //}
+            }
         }
     }
 
+    public void attack(String dir){
+        cur_atkcd = System.currentTimeMillis() - last_atkcd;
+        if (cur_atkcd / 1000 > atk_spd) {
+            switch (dir) {
+                case "U":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
+                    last_atkcd = cur_atkcd;
+                    break;
+                case "D":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
+                    last_atkcd = cur_atkcd;
+                    break;
+                case "L":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
+                    last_atkcd = cur_atkcd;
+                    break;
+                case "R":
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
+                    last_atkcd = cur_atkcd;
+                    break;
+            }
+        }
+    }
 
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
-        //check for player keypress and facing direction for enemy here
-        if(cur_atkcd > atk_spd / 1000){
-            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id);
+        switch(character_type) {
+            case 1:
+                if (cur_atkcd > atk_spd / 1000 && withinAttackRange()) {
+                    switch (cur_direction) {
+                        case UP:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
+                            last_atkcd = cur_atkcd;
+                            break;
+                        case DOWN:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
+                            last_atkcd = cur_atkcd;
+                            break;
+                        case LEFT:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
+                            last_atkcd = cur_atkcd;
+                            break;
+                        case RIGHT:
+                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
+                            last_atkcd = cur_atkcd;
+                            break;
+                    }
+                }
         }
     }
 
+    private boolean withinAttackRange() {
+        double atk_range = 0;
+        for(GameObject player : players) {
+            switch(atk_type){
+                case -1: atk_range = 50; break;
+                case 1: atk_range = 500; break;
+            }
+            return getDistance(this, player) < atk_range;
+//            switch (cur_direction) {
+//                case UP:
+//                    if (yPos - player.yPos <= atk_range) {
+//                        return true;
+//                    }
+//                    break;
+//                case DOWN:
+//                    if(player.yPos - yPos <= atk_range){
+//                        return true;
+//                    }
+//                    break;
+//                case LEFT:
+//                    if(xPos - player.xPos <= atk_range){
+//                        return true;
+//                    }
+//                    break;
+//                case RIGHT:
+//                    if(player.xPos - xPos <= atk_range){
+//                        return true;
+//                    }
+//                    break;
+//            }
+        }
+        return false;
+    }
+
+/**Writen by Graham, edited by Luka
+*getting objects inrange and then triggering the dointeract() function
+*/
     public void interact() {
         for (GameObject interactable : interactables) {
             System.out.println(getDistance(interactable, this));
@@ -376,6 +498,9 @@ public class GameObject extends JComponent {
         }
     }
 
+/**Writen by Graham
+*completing object specific interactions depending on object type
+*/
     private void doInteract() {
         switch (type) {
             case DOOR_IN:
@@ -439,6 +564,7 @@ public class GameObject extends JComponent {
         int x = 0;
         int y = 0;
 
+
         if (cur_direction == Direction.LEFT || cur_direction == Direction.UP) {
             x = (int) xPos / 100;
             y = (int) yPos / 100; //100 temp for scaling
@@ -451,6 +577,7 @@ public class GameObject extends JComponent {
         }
 //        System.out.println("[" + x + "," + y + "]");
         return Setup.textureData[Setup.curMap][y][x];
+        //should create a tile collision checker so we dont have to manually input which tiles are solid
     }
 
     /**
@@ -495,6 +622,7 @@ public class GameObject extends JComponent {
         switch(character_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
             case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
+            case 4: gr.drawImage(LoadedSprites.pullTexture(object_id + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
 
     }
@@ -543,6 +671,9 @@ public class GameObject extends JComponent {
         yPos = y;
     }
 
+/**Writen by Graham
+*checking distance between objects for interactions and other things
+*/
     public double getDistance(GameObject x, GameObject y) {
         System.out.println(x.xPos);
         System.out.println(x.yPos);
@@ -554,6 +685,7 @@ public class GameObject extends JComponent {
     public boolean died() {
         return is_dead;
     }
+
 
 
 
