@@ -165,7 +165,10 @@ public class GameFrame extends JPanel{
      * @param character_id which character's attack animation to pull
      */
     public static void addObject(int atk_dmg, int damage_type, int atk_type, String character_id, double x, double y, String d){
-        game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id, x, y, d));
+        switch (Setup.curMap) {
+            case 0: game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id, x, y, d)); break;
+            case 1: sub_game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id, x, y, d)); break;
+        }
     }
 
     public static void removeObject(GameObject o){

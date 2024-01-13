@@ -401,19 +401,19 @@ public class GameObject extends JComponent {
             switch (dir) {
                 case "U":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
-                    last_atkcd = cur_atkcd;
+                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "D":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
-                    last_atkcd = cur_atkcd;
+                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "L":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
-                    last_atkcd = cur_atkcd;
+                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "R":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
-                    last_atkcd = cur_atkcd;
+                    last_atkcd = System.currentTimeMillis();
                     break;
             }
         }
@@ -675,10 +675,10 @@ public class GameObject extends JComponent {
 *checking distance between objects for interactions and other things
 */
     public double getDistance(GameObject x, GameObject y) {
-        System.out.println(x.xPos);
-        System.out.println(x.yPos);
-        System.out.println(y.xPos);
-        System.out.println(y.yPos);
+//        System.out.println(x.xPos);
+//        System.out.println(x.yPos);
+//        System.out.println(y.xPos);
+//        System.out.println(y.yPos);
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
