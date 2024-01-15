@@ -109,8 +109,8 @@ public class Setup extends LoadedSprites {
             load("data/assets/Hongcha.png", "booperdooper_UP_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleL.png", "booperdooper_LEFT_IDLE", 58, 86);
             load("data/assets/booperdooper_runL.gif", "booperdooper_LEFT_MOV", 58, 86);
-            load("data/assets/Booperdooper.png", "booperdooper_DOWN_IDLE", 58, 86);
-            load("data/assets/Booperdooper1.png", "booperdooper_DOWN_MOV", 58, 86);
+            load("data/assets/booperdooper_idleD.png", "booperdooper_DOWN_IDLE", 58, 86);
+            load("data/assets/booperdooper_runD.gif", "booperdooper_DOWN_MOV", 58, 86);
             load("data/assets/Booperdooper1.png", "booperdooper_DOWN_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleR.png", "booperdooper_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "booperdooper_RIGHT_MOV", 58, 86);
@@ -124,10 +124,13 @@ public class Setup extends LoadedSprites {
             load("data/assets/Hongcha.png", "npc2_UP_MOV", 58, 86);
             load("data/assets/booperdooper_idleL.png", "npc2_LEFT_IDLE", 58, 86);
             load("data/assets/booperdooper_runL.gif", "npc2_LEFT_MOV", 58, 86);
-            load("data/assets/Booperdooper.png", "npc2_DOWN_IDLE", 58, 86);
-            load("data/assets/Booperdooper1.png", "npc2_DOWN_MOV", 58, 86);
+            load("data/assets/booperdooper_idleD.png", "npc2_DOWN_IDLE", 58, 86);
+            load("data/assets/booperdooper_runD.gif", "npc2_DOWN_MOV", 58, 86);
             load("data/assets/booperdooper_idleR.png", "npc2_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "npc2_RIGHT_MOV", 58, 86);
+
+            load("data/assets/house1.png", "house1", 200, 200);
+
             loadMapTextures();
         } catch (IOException e) {
             throw new RuntimeException(e);

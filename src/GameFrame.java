@@ -39,6 +39,7 @@ public class GameFrame extends JPanel{
     Timer tick = new Timer(10, new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
+//            System.out.println(p1.getTile());
                 if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
                     p1.cur_action = GameObject.Action.IDLE;
                 }
@@ -130,6 +131,24 @@ public class GameFrame extends JPanel{
                 row++;
             }
         } //end of map tile painting
+
+        ArrayList<Integer> testX = new ArrayList<Integer>();
+        ArrayList<Integer> testY = new ArrayList<Integer>();
+        //temp debug
+        gr.setColor(new Color(255,0,0,70));
+        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
+            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
+            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
+            double paintX = tileX - p1.xPos + p1.scrX;
+            double paintY = tileY - p1.yPos + p1.scrY;
+
+            if (tileX - 200 < p1.xPos + p1.scrX && tileX + 200 > p1.xPos - p1.scrX
+                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
+                gr.fillRect((int)paintX, (int)paintY, 100, 100);
+                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
+                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
+            }
+        }
 
         if (Setup.curMap == 0) {
             for (GameObject o : game_objects) {

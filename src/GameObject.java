@@ -10,7 +10,7 @@ public class GameObject extends JComponent {
     private static ArrayList<GameObject> players = new ArrayList<>(2);
     private static ArrayList<GameObject> enemies = new ArrayList<>(30);
     private static ArrayList<GameObject> interactables = new ArrayList<>(30);
-    private static ArrayList<GameObject> npc = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
+    private static ArrayList<GameObject> npcs = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
     private static int window_width, window_length;
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
     public Action cur_action = Action.IDLE;
@@ -48,6 +48,8 @@ public class GameObject extends JComponent {
     private String object_id; //for reading sprite images
     private int npcType;
     private boolean collected;
+    public PathfindAI pathfind = new PathfindAI();
+    public boolean pathfinding = true;
 
 //    private ImageIcon still, left, right, move;
 
@@ -96,10 +98,12 @@ public class GameObject extends JComponent {
                 object_id = temp[1];
                 xPos = Double.parseDouble(temp[2]);
                 yPos = Double.parseDouble(temp[3]);
-                if (Boolean.parseBoolean(temp[4])) {
+                xScale = Integer.parseInt(temp[4]);
+                yScale = Integer.parseInt(temp[5]);
+                if (Boolean.parseBoolean(temp[6])) {
                     interactables.add(this);
                 }
-                collected = Boolean.parseBoolean(temp[5]);
+                collected = Boolean.parseBoolean(temp[7]);
             }
         }
 
@@ -120,9 +124,13 @@ public class GameObject extends JComponent {
                 break;
             case 2:
                 type = ObjectType.NPC;
-                npc.add(this);
+                npcs.add(this);
                 originX = xPos;
                 originY = yPos;
+                hitboxL = 10; //temp, the hitbox stuff is all currently under testing
+                hitboxR = xScale - 10;
+                hitboxU = yScale - 50;
+                hitboxD = yScale;
                 npcSpd = move_spd * 0.25;
                 if (npcType == 1) cur_direction = Direction.LEFT;
                 break;
@@ -173,7 +181,7 @@ public class GameObject extends JComponent {
         switch(character_type) {
             case 0:
                 refreshCD();
-                //attack();
+//                attack();
                 //useAbility();
                 die();
                 break;
@@ -194,6 +202,9 @@ public class GameObject extends JComponent {
                     case 2:
                         randomMove();
                         break;
+                    case 3:
+                        if (pathfinding) searchPath((int)players.getFirst().yPos / 100, (int)players.getFirst().xPos / 100);
+                        break;
 
                 }
                 break;
@@ -210,6 +221,9 @@ public class GameObject extends JComponent {
 
     private void kill() {
         if(getDistance(this, players.get(0)) > scrX * 2){
+            cur_hp -= max_hp;
+            die();
+        } if (character_type == 4 && !collisionCheck() || xPos + xScale + move_spd >= levelWidth || xPos - move_spd <= 0 || yPos + yScale + move_spd >= levelHeight || yPos - move_spd <= 0){
             cur_hp -= max_hp;
             die();
         }
@@ -246,44 +260,149 @@ public class GameObject extends JComponent {
      * Basic code that makes npcs move back and forth
      * @param spd the npc's speed (quarter of player speed)
      */
+    int moveBackCount = 0;
     private void lrMove(double spd){
-        if (cur_direction == Direction.LEFT){
-            if (xPos >= originX - 400) {
-                xPos -= spd;
-            } else {
-                cur_direction = Direction.RIGHT;
+//        if (characterCollision()) {
+            if (cur_direction == Direction.LEFT) {
+                if (xPos >= originX - 400) {
+                    xPos -= spd;
+                } else {
+                    cur_direction = Direction.RIGHT;
+                }
             }
-        } if (cur_direction == Direction.RIGHT){
-            if (xPos <= originX){
-                xPos += spd;
-            } else {
-                cur_direction = Direction.LEFT;
+            if (cur_direction == Direction.RIGHT) {
+                if (xPos <= originX) {
+                    xPos += spd;
+                } else {
+                    cur_direction = Direction.LEFT;
+                }
             }
-        }
+            moveBackCount = 0;
+//        } else {
+//            cur_action = Action.IDLE;
+//            if (moveBackCount == 0) {
+//                if (cur_direction == Direction.RIGHT) {
+//                    xPos -= spd;
+//                }
+//                if (cur_direction == Direction.LEFT) {
+//                    xPos += spd;
+//                }
+//                moveBackCount++;
+//
+//            }
+//        }
     }
 
     Random r = new Random();
     int moveTimer = 0;
+    int lastDir = 0;
+
     //Written by Luka, beginnings of a random motion class for npc's
     private void randomMove(){
-        int move = r.nextInt(100) + 1;
-        if (move <= 75 && moveTimer == 50) {
-            int motion = r.nextInt(4) + 1;
+        if (moveTimer == 50) {
+            int motion = r.nextInt(5) + 1;
             if (motion == 1) {
+                lastDir = 1;
                 moveLeft();
             }
             if (motion == 2) {
+                lastDir = 2;
                 moveRight();
             }
             if (motion == 3) {
+                lastDir = 3;
                 moveUp();
             }
             if (motion == 4) {
+                lastDir = 4;
                 moveDown();
+            } if (motion == 5){
+                lastDir = 0;
+                cur_action = Action.IDLE;
             }
             moveTimer = 0;
         }
+        if (lastDir == 1){
+            moveLeft();
+        } if (lastDir == 2){
+            moveRight();
+        } if (lastDir == 3){
+            moveUp();
+        } if (lastDir == 4){
+            moveDown();
+        }
         moveTimer ++;
+    }
+
+    private void updatePos(){
+        if (cur_action == Action.MOV) {
+            if (cur_direction == Direction.UP) {
+                moveUp();
+            }
+            if (cur_direction == Direction.LEFT) {
+                moveLeft();
+            }
+            if (cur_direction == Direction.DOWN) {
+                moveDown();
+            }
+            if (cur_direction == Direction.RIGHT) {
+                moveRight();
+            }
+        }
+    }
+    private void searchPath(int goalRow, int goalCol){
+        int startRow = (int) yPos / 100;
+        int startCol = (int) xPos / 100;
+
+        pathfind.setNode(startRow, startCol, goalRow, goalCol);
+
+        if (pathfind.search()) {
+            int nextX = pathfind.path.get(0).col * 100;
+            int nextY = pathfind.path.get(0).row * 100;
+
+            int left = (int) xPos;
+            int right = (int) xPos + xScale;
+            int up = (int) yPos;
+            int down = (int) yPos + yScale;
+
+            if (up > nextY && left >= nextX && right < nextX + 100) {
+                moveUp();
+            } else if (up < nextY && left >= nextX && right < nextX + 100) {
+                moveDown();
+            } else if (up >= nextY && down < nextY + 100){
+                if (left > nextX){
+                    moveLeft();
+                } if (left < nextX){
+                    moveRight();
+                }
+            } else if (up > nextY && left > nextX){
+                moveUp();
+                if (!collisionCheck()){
+                    moveLeft();
+                }
+            } else if (up > nextY && left < nextX){
+                moveUp();
+                if (!collisionCheck()){
+                    moveRight();
+                }
+            } else if (up < nextY && left > nextX){
+                moveDown();
+                if (!collisionCheck()){
+                    moveLeft();
+                }
+            } else if (up < nextY && left < nextX){
+                moveDown();
+                if (!collisionCheck()){
+                    moveRight();
+                }
+            }
+
+//            int nextRow = pathfind.path.get(0).row;
+//            int nextCol = pathfind.path.get(0).col;
+//            if (nextCol == goalCol && nextRow == goalRow){
+//                pathfinding = false;
+//            }
+        }
     }
 
     //Written by Luka, does not currently work - likely would be put in a different class
@@ -346,11 +465,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.UP;
         cur_action = Action.MOV;
         if(yPos - move_spd > 0 && collisionCheck()){
-            //if(!characterCollision()) {
+//            if(characterCollision()) {
                 yPos -= move_spd;
-            //} else {
-                //yPos += move_spd;
-            //}
+//            } else {
+//                yPos += move_spd;
+//            }
         }
     }
     /**
@@ -360,11 +479,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
         if(yPos + yScale + move_spd < levelHeight && collisionCheck()){
-            //if(!characterCollision()) {
+//            if(characterCollision()) {
                 yPos += move_spd;
-            //} else {
-                //yPos -= move_spd;
-           // }
+//            } else {
+//                yPos -= move_spd;
+//            }
         }
     }
 
@@ -375,7 +494,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.LEFT;
         cur_action = Action.MOV;
         if(xPos - move_spd > 0 && collisionCheck()){
-            xPos -= move_spd;
+//            if(characterCollision()) {
+                xPos -= move_spd;
+//            } else {
+//                xPos += move_spd;
+//            }
         }
     }
     /**
@@ -385,13 +508,11 @@ public class GameObject extends JComponent {
         cur_direction = Direction.RIGHT;
         cur_action = Action.MOV;
         if(xPos + xScale + move_spd < levelWidth && collisionCheck()){
-            if(xPos - move_spd > 0 && collisionCheck()){
-                //if(!characterCollision()) {
+//                if (characterCollision()){
                     xPos += move_spd;
-                //} else {
-                   // xPos -= move_spd;
-                //}
-            }
+//                } else {
+//                    xPos -= move_spd;
+//                }
         }
     }
 
@@ -417,6 +538,8 @@ public class GameObject extends JComponent {
                     break;
             }
         }
+        System.out.println(cur_atkcd);
+        System.out.println(last_atkcd);
     }
 
     private void attack(){
@@ -593,23 +716,44 @@ public class GameObject extends JComponent {
                 toTouch = (int) (yPos + hitboxU - move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
                         !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
+//                         && characterCollision();
             } case LEFT -> {
                 toTouch = (int) (xPos + hitboxL - move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
                         !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
+//                        && characterCollision();
             } case DOWN -> {
                 toTouch = (int) (yPos + hitboxD + move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
                         !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
+//                        && characterCollision();
             } case RIGHT -> {
                 toTouch = (int) (xPos + hitboxR + move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
                         !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
+//                        && characterCollision();
             }
         }
         return false;
     }
 
+//    private boolean characterCollision(){
+//        switch (character_type) {
+//            case 0: {
+//                for (GameObject npc : npcs) {
+//                    return ((yPos + hitboxU - move_spd) > (npc.yPos + npc.yScale + npc.npcSpd) || (xPos + hitboxL - move_spd) > (npc.xPos + npc.xScale + npc.npcSpd)
+//                            || (yPos + hitboxD + move_spd) < (npc.yPos - npc.npcSpd) || (xPos + hitboxR + move_spd) < (npc.xPos - npc.npcSpd));
+//                }
+//            }
+//            case 2: {
+//                for (GameObject player : players) {
+//                    return ((yPos + hitboxU - npcSpd) > (player.yPos + player.yScale + move_spd) || (xPos + hitboxL - npcSpd) > (player.xPos + player.xScale + move_spd)
+//                            || (yPos + hitboxD + npcSpd) < (player.yPos - move_spd) || (xPos + hitboxR + npcSpd) < (player.xPos - move_spd));
+//                }
+//            }
+//        }
+//        return false;
+//    }
 
     /**
      * Written by Luka
@@ -622,6 +766,7 @@ public class GameObject extends JComponent {
         switch(character_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
             case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
+            case 3: gr.drawImage(LoadedSprites.pullTexture(object_id), drawX, drawY, xScale, yScale, null); break;
             case 4: gr.drawImage(LoadedSprites.pullTexture(object_id + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
 
