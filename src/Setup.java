@@ -5,8 +5,6 @@ import java.util.ArrayList;
 public class Setup extends LoadedSprites {
     public static int curMap;
     public String textureDir;
-//    private final File data;
-//    private final File loose;
     public static String[][][] textureData;
     public static boolean[][][] collisionData;
     public static int[] colMax;
@@ -103,9 +101,10 @@ public class Setup extends LoadedSprites {
      */
     public void load(){
         try {
+            //we can try looping through all characters for their name and then load the images
             load("data/TestMovementPics/movinggif.gif", "TestDummy", 500, 500);
             load("data/assets/Hongcha1.png", "booperdooper_UP_IDLE", 58, 86);
-            load("data/assets/Hongcha.png", "booperdooper_UP_MOV", 58, 86);
+            load("data/assets/booperdooper_runD.gif", "booperdooper_UP_MOV", 58, 86);
             load("data/assets/Hongcha.png", "booperdooper_UP_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleL.png", "booperdooper_LEFT_IDLE", 58, 86);
             load("data/assets/booperdooper_runL.gif", "booperdooper_LEFT_MOV", 58, 86);

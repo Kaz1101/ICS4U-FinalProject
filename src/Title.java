@@ -32,6 +32,7 @@ public class Title {
         @Override
         public void actionPerformed(ActionEvent e) {
             //add stuff for selecing options
+            //^ should we do joptionpane? or we can draw jbuttons
             if (Main.input.start){
                 try {
                     new GameFrame();
