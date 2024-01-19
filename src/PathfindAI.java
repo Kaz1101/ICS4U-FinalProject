@@ -152,7 +152,7 @@ public class PathfindAI {
         Node current = goal;
 
         while(current != start){
-            path.addFirst(current);
+            path.add(0, current);
             current = current.parent;
         }
     }

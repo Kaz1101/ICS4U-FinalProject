@@ -21,7 +21,7 @@ public class GameObject extends JComponent {
     private boolean is_dead = false;
     //public String cur_tile;
     private static double move_spd;
-    private double ms;
+    private double ms; //movement speed for this object
     public double xPos;
     public double yPos;
     private double originX; //the origin stuff and dedicated speed is under testing!
@@ -51,12 +51,14 @@ public class GameObject extends JComponent {
     private int npcType;
     private boolean collected;
     public PathfindAI pathfind = new PathfindAI();
-    public boolean pathfinding = true;
+    public boolean pathfinding = false;
+    private int counter = 0;
+    private int moveBackCount = 0;
+    private static Random r = new Random();
 
-//    private ImageIcon still, left, right, move;
 
     /**
-     * Written by Christina, adjusted/edited by Luka
+     * @author Christina, adjusted by Luka
      * Sets up and initializes variables based on object data given from a csv file
      * @param temp a String array consisting of data for specific object being loaded
      */
@@ -92,6 +94,9 @@ public class GameObject extends JComponent {
                 xScale = Integer.parseInt(temp[4]);
                 yScale = Integer.parseInt(temp[5]);
                 npcType = Integer.parseInt(temp[6]);
+                if(npcType == 3){
+                    pathfinding = true;
+                }
                 if (Boolean.parseBoolean(temp[7])) {
                     interactables.add(this);
                 }
@@ -117,19 +122,26 @@ public class GameObject extends JComponent {
                 hitboxR = xScale - 10;
                 hitboxU = yScale - 50;
                 hitboxD = yScale;
-                players.add(this);
                 ms = move_spd;
+                players.add(this);
                 break;
             case 1:
                 type = ObjectType.ENEMY;
+                //test
+                pathfinding = true;
+
                 enemies.add(this);
-                ms = move_spd * 0.5;
+                ms = move_spd * r.nextDouble() + 0.5;
+                if(ms > move_spd){
+                    ms -= 0.7;
+                }
                 break;
             case 2:
                 type = ObjectType.NPC;
                 npcs.add(this);
                 originX = xPos;
                 originY = yPos;
+                ms = move_spd * 0.3;
                 hitboxL = 10; //temp, the hitbox stuff is all currently under testing
                 hitboxR = xScale - 10;
                 hitboxU = yScale - 50;
@@ -144,12 +156,20 @@ public class GameObject extends JComponent {
                     type = ObjectType.DOOR_OUT;
                 }
                 break;
-//            case 4:
-//                ms = move_spd * 1.5;
-//                break;
         }
     }
 
+    /**
+     * @author Christina
+     * Constructor for attack objects
+     * @param atk_dmg the damage that this object deals
+     * @param damage_type the type of character that released this attack
+     * @param atk_type the range of the attack
+     * @param character_id the specific character that released this attack
+     * @param xPos x position of the character that released this attack
+     * @param yPos the y position of the character that released this attack
+     * @param dir the direction the character is facing when releasing this attack
+     */
     public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id, double xPos, double yPos, String dir){
         this.atk_dmg = atk_dmg;
         this.damage_type = damage_type;
@@ -157,45 +177,49 @@ public class GameObject extends JComponent {
         this.object_id = character_id;
         this.xPos = xPos;
         this.yPos = yPos - 20;
+        ms = move_spd * 2;
         character_type = 4;
-        max_hp = 1;//if we want multiple hits or not
+        max_hp = 1; //single hit
         cur_hp = 1;
         xScale = 50;
         yScale = 50;
-        ms = move_spd * 1.5;
         switch(dir){
             case "u": cur_direction = Direction.UP; break;
             case "d": cur_direction = Direction.DOWN; break;
             case "l": cur_direction = Direction.LEFT; break;
             case "r": cur_direction = Direction.RIGHT; break;
         }
-        //set position and hitbox here
     }
 
 
+    /**
+     * Calculates movement speed based on screen size
+     * @param x the width of the screen
+     * @param y the length of the screen
+     */
     public static void getWindowSize(int x, int y) {
         window_width = x;
         System.out.println(window_width);
         window_length = y;
         System.out.println(window_length);
-        move_spd = (double) y / 150; //for now takes 5 seconds to move across screen from bottom to top, can scale later
+        move_spd = (double) y / 150;
         System.out.println(move_spd);
     }
 
-
+    /**
+     * @author Christina, Luka
+     * The method that gets called for each timer tick, checks for and refreshes object status
+     */
     public void doTick(){
-        //refresh cooldown
         switch(character_type) {
             case 0:
                 refreshCD();
-//                attack();
                 //useAbility();
                 die();
                 break;
             case 1:
-                //moveForward();
-                //do_damage();
-                trackPlayer(ms);
+                if (pathfinding) searchPath((int)players.get(0).yPos / 100, (int)players.get(0).xPos / 100);
+                attack();
                 break;
             case 2:
                 switch (npcType) {
@@ -210,7 +234,7 @@ public class GameObject extends JComponent {
                         randomMove();
                         break;
                     case 3:
-                        if (pathfinding) searchPath((int)players.getFirst().yPos / 100, (int)players.getFirst().xPos / 100);
+                        if (pathfinding) searchPath((int)players.get(0).yPos / 100, (int)players.get(0).xPos / 100);
                         break;
 
                 }
@@ -225,17 +249,29 @@ public class GameObject extends JComponent {
     }
 
 
-
+    /**
+     * @author Christina
+     * Kills the object calling this method by taking away max hp
+     */
     private void kill() {
-        if(getDistance(this, players.get(0)) > scrX * 2){
+        if(getDistance(this, players.get(0)) > scrX * 2 ||! collisionCheck()){
             cur_hp -= max_hp;
             die();
-        } if (character_type == 4 && !collisionCheck() || xPos + xScale + move_spd >= levelWidth || xPos - move_spd <= 0 || yPos + yScale + move_spd >= levelHeight || yPos - move_spd <= 0){
+        } if (character_type == 4 && (xPos + xScale + move_spd >= levelWidth || xPos - move_spd <= 0 || yPos + yScale + move_spd >= levelHeight || yPos - move_spd <= 0)){
             cur_hp -= max_hp;
             die();
         }
     }
 
+    private void kill(GameObject o){
+        o.cur_hp -= max_hp;
+        o.die();
+    }
+
+    /**
+     * @author Christina
+     * Movement for attack objects that keeps them moving in a straight line
+     */
     private void moveForward() {
         switch(cur_direction){
             case UP: moveUp(); break;
@@ -246,10 +282,9 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * Written by Luka
+     * @author Luka
      * Basic code for idle npcs where they move slightly every approx 1 sec
      */
-    private int counter = 0;
     private void idle(){
         counter ++;
         if (counter == 100){
@@ -262,14 +297,14 @@ public class GameObject extends JComponent {
         }
     }
 
+
+
     /**
-     * Written by Luka
+     * @author Luka
      * Basic code that makes npcs move back and forth
      * @param spd the npc's speed (quarter of player speed)
      */
-    int moveBackCount = 0;
     private void lrMove(double spd){
-//        if (characterCollision()) {
             if (cur_direction == Direction.LEFT) {
                 if (xPos >= originX - 400) {
                     xPos -= spd;
@@ -285,22 +320,9 @@ public class GameObject extends JComponent {
                 }
             }
             moveBackCount = 0;
-//        } else {
-//            cur_action = Action.IDLE;
-//            if (moveBackCount == 0) {
-//                if (cur_direction == Direction.RIGHT) {
-//                    xPos -= spd;
-//                }
-//                if (cur_direction == Direction.LEFT) {
-//                    xPos += spd;
-//                }
-//                moveBackCount++;
-//
-//            }
-//        }
     }
 
-    Random r = new Random();
+
     int moveTimer = 0;
     int lastDir = 0;
 
@@ -357,6 +379,12 @@ public class GameObject extends JComponent {
             }
         }
     }
+
+    /**
+     *
+     * @param goalRow the y coordinate of the destination
+     * @param goalCol the x coordinate of the destination
+     */
     private void searchPath(int goalRow, int goalCol){
         int startRow = (int) yPos / 100;
         int startCol = (int) xPos / 100;
@@ -412,51 +440,41 @@ public class GameObject extends JComponent {
         }
     }
 
-    //Written by Luka, does not currently work - likely would be put in a different class
-    private void trackPlayer(double spd){
-        double playerX = players.get(0).xPos;
-        double playerY = players.get(0).yPos;
-        System.out.println(xPos);
-        System.out.println(yPos);
-        if (playerX > xPos - 800){
-            xPos -= spd;
-            System.out.println("aa");
-        } else if (playerX < xPos + 800){
-            xPos += spd;
-            System.out.println("ee");
-        } if (playerY > yPos - 800){
-            yPos -= spd;
-            System.out.println("hks");
-        } else if (playerY < yPos + 800){
-            yPos += spd;
-            System.out.println("asdfkh");
-        }
-    }
-
+    /**
+     * Checks for if the opposite character type from the attacker is within range, and deals damage if collides
+     */
     private void do_damage() {
         switch(damage_type){
             case 1:
                 for(GameObject enemy : enemies){
-                    if(getDistance(this, enemy) < 1){
+                    if(getDistance(this, enemy) < 10){
                         enemy.takeDamage(atk_dmg);
-                        kill();
+                        kill(this);
                     }
                 }
                 break;
             case -1:
                 for(GameObject player : players){
-                    if(touches(player)){
+                    if(getDistance(this, player) < 10){
                         player.takeDamage(atk_dmg);
-                        kill();
+                        kill(this);
                     }
                 }
         }
     }
 
-    private boolean touches(GameObject o) {
-        return this.getBounds().intersects(o.getBounds());
-    }
+//    /**
+//     * Checks for if this object intersects with another object
+//     * @param o the other object to check collision with
+//     * @return true if the two objects intersect
+//     */
+//    private boolean touches(GameObject o) {
+//        return this.getBounds().intersects(o.getBounds());
+//    }
 
+    /**
+     * Checks for if the current object is dead or not (is hp below 0), and sets is_dead to true if is dead
+     */
     private void die() {
         if(cur_hp <= 0){
             is_dead = true;
@@ -472,11 +490,7 @@ public class GameObject extends JComponent {
         cur_direction = Direction.UP;
         cur_action = Action.MOV;
         if(yPos - ms > 0 && collisionCheck()){
-//            if(characterCollision()) {
                 yPos -= ms;
-//            } else {
-//                yPos += move_spd;
-//            }
         }
     }
     /**
@@ -486,11 +500,7 @@ public class GameObject extends JComponent {
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
         if(yPos + yScale + ms < levelHeight && collisionCheck()){
-//            if(characterCollision()) {
                 yPos += ms;
-//            } else {
-//                yPos -= move_spd;
-//            }
         }
     }
 
@@ -500,12 +510,8 @@ public class GameObject extends JComponent {
     public void moveLeft(){
         cur_direction = Direction.LEFT;
         cur_action = Action.MOV;
-        if(xPos - ms > 0 && collisionCheck()){
-//            if(characterCollision()) {
-                xPos -= ms;
-//            } else {
-//                xPos += move_spd;
-//            }
+        if(xPos - ms > 10 && collisionCheck()){
+            xPos -= ms;
         }
     }
     /**
@@ -515,22 +521,24 @@ public class GameObject extends JComponent {
         cur_direction = Direction.RIGHT;
         cur_action = Action.MOV;
         if(xPos + xScale + ms < levelWidth && collisionCheck()){
-//                if (characterCollision()){
+            if(xPos - ms > 0 && collisionCheck()){
                     xPos += ms;
-//                } else {
-//                    xPos -= move_spd;
-//                }
+            }
         }
     }
 
+    /**
+     * Attack for player, checks for attack key input direction and creates an attack object facing the same direction
+     * also checks for if time between attacks is long enough
+     * @param dir direction of the attack
+     */
     public void attack(String dir){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
         if (cur_atkcd / 1000 > atk_spd) {
             switch (dir) {
                 case "U":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
-                    //last_atkcd = System.currentTimeMillis();
-                    last_atkcd = cur_atkcd;
+                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "D":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
@@ -550,89 +558,104 @@ public class GameObject extends JComponent {
         System.out.println(last_atkcd);
     }
 
+    /**
+     * Attack for enemies, checks for if player is within attack range and attacks if true
+     * attacks are in the direction that the enemies are facing
+     */
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
-        switch(character_type) {
-            case 1:
-                if (cur_atkcd > atk_spd / 1000 && withinAttackRange()) {
-                    switch (cur_direction) {
-                        case UP:
-                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
-                            last_atkcd = cur_atkcd;
-                            break;
-                        case DOWN:
-                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
-                            last_atkcd = cur_atkcd;
-                            break;
-                        case LEFT:
-                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
-                            last_atkcd = cur_atkcd;
-                            break;
-                        case RIGHT:
-                            GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
-                            last_atkcd = cur_atkcd;
-                            break;
-                    }
-                }
+        if (cur_atkcd / 1000 > atk_spd && withinAttackRange()) {
+            switch (cur_direction) {
+                case UP:
+                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
+                    last_atkcd = System.currentTimeMillis();
+                    break;
+                case DOWN: GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
+                    last_atkcd = System.currentTimeMillis();
+                    break;
+                case LEFT: GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
+                    last_atkcd = System.currentTimeMillis();
+                    break;
+                case RIGHT: GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
+                    last_atkcd = System.currentTimeMillis();
+                    break;
+            }
         }
     }
 
+    /**
+     * Checks for if player is within the attack range of the enemy character
+     * @return true if player is within attack range of this enemy object
+     */
     private boolean withinAttackRange() {
         double atk_range = 0;
+        switch(atk_type){
+            case -1: atk_range = 50; break;
+            case 1: atk_range = 500; break;
+        }
         for(GameObject player : players) {
-            switch(atk_type){
-                case -1: atk_range = 50; break;
-                case 1: atk_range = 500; break;
-            }
-            return getDistance(this, player) < atk_range;
-//            switch (cur_direction) {
-//                case UP:
-//                    if (yPos - player.yPos <= atk_range) {
-//                        return true;
-//                    }
-//                    break;
-//                case DOWN:
-//                    if(player.yPos - yPos <= atk_range){
-//                        return true;
-//                    }
-//                    break;
-//                case LEFT:
-//                    if(xPos - player.xPos <= atk_range){
-//                        return true;
-//                    }
-//                    break;
-//                case RIGHT:
-//                    if(player.xPos - xPos <= atk_range){
-//                        return true;
-//                    }
-//                    break;
-//            }
+            return getRange(atk_range);
         }
         return false;
     }
 
-/**Writen by Graham, edited by Luka
-*getting objects inrange and then triggering the dointeract() function
-*/
+
+    /**
+     * Gets the range of the player compared to this enemy object and compares to attack range
+     * @param atk_range the range of the attack
+     * @return true if player is within attack range
+     */
+    private boolean getRange(double atk_range){
+        GameObject player = players.get(0);
+        switch(cur_direction){
+            case UP:
+                if(Math.abs(xPos - player.xPos) < 20){
+                    return yPos - player.yPos < atk_range;
+                }
+                break;
+            case DOWN:
+                if(Math.abs(xPos - player.xPos) < 20){
+                    return player.yPos - yPos < atk_range;
+                }
+                break;
+            case LEFT:
+                if(Math.abs(yPos - player.yPos) < 20){
+                    return xPos - player.xPos < atk_range;
+                }
+                break;
+            case RIGHT:
+                if(Math.abs(yPos - player.yPos) < 20){
+                    return player.yPos - yPos < atk_range;
+                }
+                break;
+        }
+        return false;
+    }
+
+    /**
+     * @author Graham, edited by Luka
+     * getting objects in range and then triggering the doInteract() function
+     */
     public void interact() {
-        for (GameObject interactable : interactables) {
-            System.out.println(getDistance(interactable, this));
+        for (GameObject intractable : interactables) {
+            System.out.println(getDistance(intractable, this));
             if (cur_direction == Direction.UP) {
-                if (getDistance(interactable, this) <= 100) {
-                    interactable.doInteract();
+                if (getDistance(intractable, this) <= 100) {
+                    intractable.doInteract();
                 }
             } if (cur_direction == Direction.DOWN){
-                if (getDistance(interactable, this) >= 100) {
-                    interactable.doInteract();
+                if (getDistance(intractable, this) >= 100) {
+                    intractable.doInteract();
                 }
             }
         }
     }
 
-/**Writen by Graham
-*completing object specific interactions depending on object type
-*/
-    private void doInteract(){
+    /**
+     * @author Graham
+     * completing object specific interactions depending on object type
+     */
+    private void doInteract() {
         switch (type) {
             case DOOR_IN:
                 Setup.curMap = 1;
@@ -643,11 +666,15 @@ public class GameObject extends JComponent {
                 Main.bgm.changeTrack(1);
                 break;
             default:
-            System.out.println("poo poo");
+                System.out.println("poo poo"); //????? LMAO
                 break;
         }
     }
 
+    /**
+     * Takes away from this object's current hp
+     * @param dmg the amount of damage the other object deals
+     */
     public void takeDamage(double dmg){
         cur_action = Action.DMG;
         if(cur_hp - dmg >= 0){
@@ -657,12 +684,18 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Uses this character's specific ability
+     */
     public void useAbility(){
         //somehow get range here
 
 
     }
 
+    /**
+     * Updates all cooldowns for this object for each tick time
+     */
     private void refreshCD(){
         if (cur_cd - 10 > 0) {
             cur_cd -= 10;
@@ -726,44 +759,23 @@ public class GameObject extends JComponent {
                 toTouch = (int) (yPos + hitboxU - move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
                         !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
-//                         && characterCollision();
             } case LEFT -> {
                 toTouch = (int) (xPos + hitboxL - move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
                         !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
-//                        && characterCollision();
             } case DOWN -> {
                 toTouch = (int) (yPos + hitboxD + move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
                         !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
-//                        && characterCollision();
             } case RIGHT -> {
                 toTouch = (int) (xPos + hitboxR + move_spd) / 100;
                 return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
                         !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
-//                        && characterCollision();
             }
         }
         return false;
     }
 
-//    private boolean characterCollision(){
-//        switch (character_type) {
-//            case 0: {
-//                for (GameObject npc : npcs) {
-//                    return ((yPos + hitboxU - move_spd) > (npc.yPos + npc.yScale + npc.npcSpd) || (xPos + hitboxL - move_spd) > (npc.xPos + npc.xScale + npc.npcSpd)
-//                            || (yPos + hitboxD + move_spd) < (npc.yPos - npc.npcSpd) || (xPos + hitboxR + move_spd) < (npc.xPos - npc.npcSpd));
-//                }
-//            }
-//            case 2: {
-//                for (GameObject player : players) {
-//                    return ((yPos + hitboxU - npcSpd) > (player.yPos + player.yScale + move_spd) || (xPos + hitboxL - npcSpd) > (player.xPos + player.xScale + move_spd)
-//                            || (yPos + hitboxD + npcSpd) < (player.yPos - move_spd) || (xPos + hitboxR + npcSpd) < (player.xPos - move_spd));
-//                }
-//            }
-//        }
-//        return false;
-//    }
 
     /**
      * Written by Luka
@@ -828,12 +840,15 @@ public class GameObject extends JComponent {
     }
 
 
-    //getters and setters
+    /**
+     *
+     * @return the object ID of this object
+     */
     public String getObjectID() {
         return object_id;
     }
 
-
+    //we might not need these
     public void setxPos(double x){
         xPos = x;
     }
@@ -842,17 +857,18 @@ public class GameObject extends JComponent {
         yPos = y;
     }
 
-/**Writen by Graham
-*checking distance between objects for interactions and other things
-*/
+    /**
+     * @author Graham
+     * checking distance between objects for interactions and other things
+     */
     public double getDistance(GameObject x, GameObject y) {
-//        System.out.println(x.xPos);
-//        System.out.println(x.yPos);
-//        System.out.println(y.xPos);
-//        System.out.println(y.yPos);
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
+    /**
+     *
+     * @return the status of the current object, if it is dead or not
+     */
     public boolean died() {
         return is_dead;
     }

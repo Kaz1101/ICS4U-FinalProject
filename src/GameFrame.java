@@ -37,8 +37,8 @@ public class GameFrame extends JPanel{
 
     /**
      * Written by Luka, with things added by Graham and Christina
-     * Game loop
-     * Runs through every 10 msec and performs appropriate actions
+     * Timer that calls corresponding methods for all player inputs and calls doTick() for every object
+     * Runs through every 10 milliseconds and performs appropriate actions
      */
     Timer tick = new Timer(10, new ActionListener() {
         @Override
@@ -89,30 +89,25 @@ public class GameFrame extends JPanel{
                             obj.doTick();
                             if (obj.died()) {
                                 game_objects.remove(obj);
+                                i--;
                             }
                         }
                     }
-                    if (Setup.curMap == 1) {
-                        for (int i = 0; i < sub_game_objects.size(); i++) {
-                            GameObject obj = sub_game_objects.get(i);
-                            obj.doTick();
-//                        obj.cur_action = GameObject.Action.IDLE;
+                } if (Setup.curMap == 1) {
+                    for (int i = 0; i < sub_game_objects.size(); i++) {
+                        GameObject obj = sub_game_objects.get(i);
+                        obj.doTick();
+                        if(obj.died()){
+                            game_objects.remove(obj);
                         }
                     }
-
-                    if (p1.died()) {
-                        game_over = true;
-                    }
-                    repaint();
-                }
-                case PAUSED -> {
-                    if (pauseDisplay == 0) {
-                        pauseDisplay++;
-                        Main.bgm.stop();
-                        repaint();
-                    }
-                }
             }
+
+
+            if (p1.died()) {
+                game_over = true;
+            }
+            repaint();
         }
     });
 
@@ -193,10 +188,10 @@ public class GameFrame extends JPanel{
 
     }
 
-
     /**
-     * Creates and adds a character GameObject to the GameObject arraylist
-     * @param s a string array that contains information of a character
+     * Creates and adds a GameObject to the GameObject arraylist
+     * @param s a string array that contains information of the object that is created
+     * @param map the specific map that this object should be added to
      */
     public static void addObject(String[] s, int map) {
         switch (map) {
@@ -219,9 +214,6 @@ public class GameFrame extends JPanel{
         }
     }
 
-    public static void removeObject(GameObject o){
-        game_objects.remove(o);
-    }
 
     /**
      * Written by Luka
@@ -234,7 +226,6 @@ public class GameFrame extends JPanel{
             addObject(RWFile.readInitialFile(loose[i]), Integer.parseInt(loose[i+1]));
         }
     }
-
 }
 
 

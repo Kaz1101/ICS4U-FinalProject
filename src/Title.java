@@ -53,6 +53,7 @@ public class Title {
             } if (!Main.input.options){
                 titleDisplay(0);
             }
+            //^ should we do joptionpane? or we can draw jbuttons
             if (Main.input.start){
                 try {
                     Main.bgm.stop();
