@@ -1,5 +1,8 @@
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.*;
 
 
@@ -18,8 +21,7 @@ public class GameObject extends JComponent {
     private boolean is_dead = false;
     //public String cur_tile;
     private static double move_spd;
-    private double npcSpd;
-    private double enemySpd;
+    private double ms;
     public double xPos;
     public double yPos;
     private double originX; //the origin stuff and dedicated speed is under testing!
@@ -34,8 +36,8 @@ public class GameObject extends JComponent {
     private double levelHeight = Setup.rowMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
     public int scrX = window_width/2 - xScale/2;
     public int scrY = window_length/2 - yScale/2;
-    private double max_hp; //max health points
-    private double cur_hp; //current health points
+    public double max_hp; //max health points
+    public double cur_hp; //current health points
     private int atk_dmg, atk_spd;
     private int atk_type; //-1 = melee, 1 = ranged
     private double ap;  //ability power that is used as base effectiveness of ability
@@ -116,11 +118,12 @@ public class GameObject extends JComponent {
                 hitboxU = yScale - 50;
                 hitboxD = yScale;
                 players.add(this);
+                ms = move_spd;
                 break;
             case 1:
                 type = ObjectType.ENEMY;
                 enemies.add(this);
-                enemySpd = move_spd * 0.5;
+                ms = move_spd * 0.5;
                 break;
             case 2:
                 type = ObjectType.NPC;
@@ -131,7 +134,7 @@ public class GameObject extends JComponent {
                 hitboxR = xScale - 10;
                 hitboxU = yScale - 50;
                 hitboxD = yScale;
-                npcSpd = move_spd * 0.25;
+                ms = move_spd * 0.25;
                 if (npcType == 1) cur_direction = Direction.LEFT;
                 break;
             case 3:
@@ -141,6 +144,9 @@ public class GameObject extends JComponent {
                     type = ObjectType.DOOR_OUT;
                 }
                 break;
+//            case 4:
+//                ms = move_spd * 1.5;
+//                break;
         }
     }
 
@@ -156,6 +162,7 @@ public class GameObject extends JComponent {
         cur_hp = 1;
         xScale = 50;
         yScale = 50;
+        ms = move_spd * 1.5;
         switch(dir){
             case "u": cur_direction = Direction.UP; break;
             case "d": cur_direction = Direction.DOWN; break;
@@ -188,7 +195,7 @@ public class GameObject extends JComponent {
             case 1:
                 //moveForward();
                 //do_damage();
-                trackPlayer(enemySpd);
+                trackPlayer(ms);
                 break;
             case 2:
                 switch (npcType) {
@@ -197,7 +204,7 @@ public class GameObject extends JComponent {
                         break;
                     case 1:
                         cur_action = Action.MOV;
-                        lrMove(npcSpd);
+                        lrMove(ms);
                         break;
                     case 2:
                         randomMove();
@@ -464,9 +471,9 @@ public class GameObject extends JComponent {
     public void moveUp(){
         cur_direction = Direction.UP;
         cur_action = Action.MOV;
-        if(yPos - move_spd > 0 && collisionCheck()){
+        if(yPos - ms > 0 && collisionCheck()){
 //            if(characterCollision()) {
-                yPos -= move_spd;
+                yPos -= ms;
 //            } else {
 //                yPos += move_spd;
 //            }
@@ -478,9 +485,9 @@ public class GameObject extends JComponent {
     public void moveDown(){
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
-        if(yPos + yScale + move_spd < levelHeight && collisionCheck()){
+        if(yPos + yScale + ms < levelHeight && collisionCheck()){
 //            if(characterCollision()) {
-                yPos += move_spd;
+                yPos += ms;
 //            } else {
 //                yPos -= move_spd;
 //            }
@@ -493,9 +500,9 @@ public class GameObject extends JComponent {
     public void moveLeft(){
         cur_direction = Direction.LEFT;
         cur_action = Action.MOV;
-        if(xPos - move_spd > 0 && collisionCheck()){
+        if(xPos - ms > 0 && collisionCheck()){
 //            if(characterCollision()) {
-                xPos -= move_spd;
+                xPos -= ms;
 //            } else {
 //                xPos += move_spd;
 //            }
@@ -507,9 +514,9 @@ public class GameObject extends JComponent {
     public void moveRight(){
         cur_direction = Direction.RIGHT;
         cur_action = Action.MOV;
-        if(xPos + xScale + move_spd < levelWidth && collisionCheck()){
+        if(xPos + xScale + ms < levelWidth && collisionCheck()){
 //                if (characterCollision()){
-                    xPos += move_spd;
+                    xPos += ms;
 //                } else {
 //                    xPos -= move_spd;
 //                }
@@ -522,7 +529,8 @@ public class GameObject extends JComponent {
             switch (dir) {
                 case "U":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
-                    last_atkcd = System.currentTimeMillis();
+                    //last_atkcd = System.currentTimeMillis();
+                    last_atkcd = cur_atkcd;
                     break;
                 case "D":
                     GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
@@ -624,13 +632,15 @@ public class GameObject extends JComponent {
 /**Writen by Graham
 *completing object specific interactions depending on object type
 */
-    private void doInteract() {
+    private void doInteract(){
         switch (type) {
             case DOOR_IN:
                 Setup.curMap = 1;
+                Main.bgm.changeTrack(2);
                 break;
             case DOOR_OUT:
                 if(Setup.curMap >= 1) Setup.curMap --;
+                Main.bgm.changeTrack(1);
                 break;
             default:
             System.out.println("poo poo");
@@ -769,7 +779,6 @@ public class GameObject extends JComponent {
             case 3: gr.drawImage(LoadedSprites.pullTexture(object_id), drawX, drawY, xScale, yScale, null); break;
             case 4: gr.drawImage(LoadedSprites.pullTexture(object_id + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
-
     }
 
     /**
@@ -791,6 +800,23 @@ public class GameObject extends JComponent {
             draw(gr, (int) paintX, (int) paintY); // for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
 
         }
+    }
+
+    public void drawOverlay(Graphics2D gr){
+        gr.setColor(Color.white);
+        gr.fillRect(20, Main.y - 150,400, 120);
+        gr.setColor(Color.black);
+        gr.fillRect(25, Main.y - 145,390, 110);
+        gr.setFont(new Font("Calibri Bold", Font.PLAIN, 26));
+        gr.setColor(Color.white);
+        gr.drawString("HP", 50, Main.y - 100);
+        gr.setColor(Color.gray);
+        gr.fillRect(100, Main.y - 120, 200, 25);
+        gr.setColor(Color.red);
+        gr.fillRect(100, Main.y - 120, (int) (cur_hp / max_hp * 200), 25);
+        System.out.println(cur_hp);
+
+
     }
 
     /**

@@ -10,6 +10,8 @@ public class GameFrame extends JPanel{
     private static ArrayList<GameObject> game_objects = new ArrayList<>();
     private static ArrayList<GameObject> sub_game_objects = new ArrayList<>();
     private boolean game_over = false;
+    private JLabel pauseScreen = new JLabel(new ImageIcon(LoadedSprites.pullTexture("tempPause")));
+    private int pauseDisplay = 0;
 
     /**
      * Refreshes window to now initialize and display the game with any necessary objects
@@ -26,6 +28,8 @@ public class GameFrame extends JPanel{
         this.repaint();
         this.setVisible(true);
 
+        Main.bgm.changeTrack(1);
+
         System.out.println("game start");
         tick.start();
     }
@@ -39,61 +43,76 @@ public class GameFrame extends JPanel{
     Timer tick = new Timer(10, new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-//            System.out.println(p1.getTile());
-                if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
-                    p1.cur_action = GameObject.Action.IDLE;
-                }
-                if (Main.input.up) {
-                    p1.moveUp();
-                }
-                if (Main.input.left) {
-                    p1.moveLeft();
-                }
-                if (Main.input.down) {
-                    p1.moveDown();
-                }
-                if (Main.input.right) {
-                    p1.moveRight();
-                }
-                if(Main.input.atk_up){
-                    p1.attack("U");
-                }
-                if(Main.input.atk_down){
-                    p1.attack("D");
-                }
-                if(Main.input.atk_left){
-                    p1.attack("L");
-                }
-                if(Main.input.atk_right){
-                    p1.attack("R");
-                }
-                if(Main.input.interact) {
-                     p1.cur_action = GameObject.Action.INTERACT;
-                     p1.interact();
-                }
-                if (Setup.curMap == 0) {
-                    for (int i = 0; i < game_objects.size(); i++) {
-                        GameObject obj = game_objects.get(i);
-                        obj.cur_action = GameObject.Action.IDLE;
-                        obj.doTick();
-                        if(obj.died()){
-                            game_objects.remove(obj);
+            switch (Main.gameState) {
+                case PLAY -> {
+                    if (pauseDisplay == 1){
+                        Main.window.remove(pauseScreen);
+                        Main.bgm.play();
+                        Main.bgm.loop();
+                        pauseDisplay--;
+                    }
+                    if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
+                        p1.cur_action = GameObject.Action.IDLE;
+                    }
+                    if (Main.input.up) {
+                        p1.moveUp();
+                    }
+                    if (Main.input.left) {
+                        p1.moveLeft();
+                    }
+                    if (Main.input.down) {
+                        p1.moveDown();
+                    }
+                    if (Main.input.right) {
+                        p1.moveRight();
+                    }
+                    if (Main.input.atk_up) {
+                        p1.attack("U");
+                    }
+                    if (Main.input.atk_down) {
+                        p1.attack("D");
+                    }
+                    if (Main.input.atk_left) {
+                        p1.attack("L");
+                    }
+                    if (Main.input.atk_right) {
+                        p1.attack("R");
+                    }
+                    if (Main.input.interact) {
+                        p1.cur_action = GameObject.Action.INTERACT;
+                        p1.interact();
+                    }
+                    if (Setup.curMap == 0) {
+                        for (int i = 0; i < game_objects.size(); i++) {
+                            GameObject obj = game_objects.get(i);
+                            obj.cur_action = GameObject.Action.IDLE;
+                            obj.doTick();
+                            if (obj.died()) {
+                                game_objects.remove(obj);
+                            }
                         }
                     }
-                } if (Setup.curMap == 1) {
-                    for (int i = 0; i < sub_game_objects.size(); i++) {
-                        GameObject obj = sub_game_objects.get(i);
-                        obj.doTick();
+                    if (Setup.curMap == 1) {
+                        for (int i = 0; i < sub_game_objects.size(); i++) {
+                            GameObject obj = sub_game_objects.get(i);
+                            obj.doTick();
 //                        obj.cur_action = GameObject.Action.IDLE;
+                        }
                     }
+
+                    if (p1.died()) {
+                        game_over = true;
+                    }
+                    repaint();
+                }
+                case PAUSED -> {
+                    if (pauseDisplay == 0) {
+                        pauseDisplay++;
+                        Main.bgm.stop();
+                        repaint();
+                    }
+                }
             }
-
-
-
-            if (p1.died()) {
-                game_over = true;
-            }
-            repaint();
         }
     });
 
@@ -132,23 +151,23 @@ public class GameFrame extends JPanel{
             }
         } //end of map tile painting
 
-        ArrayList<Integer> testX = new ArrayList<Integer>();
-        ArrayList<Integer> testY = new ArrayList<Integer>();
-        //temp debug
-        gr.setColor(new Color(255,0,0,70));
-        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
-            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
-            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
-            double paintX = tileX - p1.xPos + p1.scrX;
-            double paintY = tileY - p1.yPos + p1.scrY;
-
-            if (tileX - 200 < p1.xPos + p1.scrX && tileX + 200 > p1.xPos - p1.scrX
-                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
-                gr.fillRect((int)paintX, (int)paintY, 100, 100);
-                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
-                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
-            }
-        }
+//        ArrayList<Integer> testX = new ArrayList<Integer>();
+//        ArrayList<Integer> testY = new ArrayList<Integer>();
+//        //temp debug
+//        gr.setColor(new Color(255,0,0,70));
+//        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
+//            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
+//            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
+//            double paintX = tileX - p1.xPos + p1.scrX;
+//            double paintY = tileY - p1.yPos + p1.scrY;
+//
+//            if (tileX - 200 < p1.xPos + p1.scrX && tileX + 200 > p1.xPos - p1.scrX
+//                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
+//                gr.fillRect((int)paintX, (int)paintY, 100, 100);
+//                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
+//                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
+//            }
+//        }
 
         if (Setup.curMap == 0) {
             for (GameObject o : game_objects) {
@@ -159,11 +178,21 @@ public class GameFrame extends JPanel{
                 o.renderCheck(gr);
             }
         }
+
+        p1.drawOverlay(gr);
+
         //player painting
         p1.draw(gr, 0, 0);
+
+        if (pauseDisplay == 1){
+            gr.setColor(new Color(30,30,30, 95));
+            gr.fillRect(0, 0, Main.x, Main.y);
+            gr.drawImage(LoadedSprites.pullTexture("tempPause"), (Main.x / 3), (Main.y / 3), 650, 400, null);
+        }
         gr.dispose();
 
     }
+
 
     /**
      * Creates and adds a character GameObject to the GameObject arraylist
@@ -205,6 +234,7 @@ public class GameFrame extends JPanel{
             addObject(RWFile.readInitialFile(loose[i]), Integer.parseInt(loose[i+1]));
         }
     }
+
 }
 
 

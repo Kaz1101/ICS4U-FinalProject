@@ -1,3 +1,5 @@
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -5,6 +7,10 @@ import java.io.IOException;
 
 public class Title {
 
+
+
+    private ImageIcon[] title = new ImageIcon[4];
+    private JLabel label = new JLabel();
     /**
      * Written by Luka
      * sets up window, displays title screen (or the current lack thereof)
@@ -16,9 +22,18 @@ public class Title {
         Main.window.setTitle("aaaaaaaaa");
         Main.window.setExtendedState(JFrame.MAXIMIZED_BOTH);
         Main.window.setUndecorated(true);
-        JLabel test = new JLabel(new ImageIcon(LoadedSprites.pullTexture("TestDummy")));
+        title[0] = new ImageIcon(LoadedSprites.pullTexture("main_title"));
+        title[1] = new ImageIcon(LoadedSprites.pullTexture("TestDummy"));
+        Main.window.add(label);
+        titleDisplay(0);
         Main.window.addKeyListener(Main.input);
-        Main.window.add(test);
+        try {
+            Main.bgm.set(0);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            throw new RuntimeException(e);
+        }
+        Main.bgm.play();
+        Main.bgm.loop();
         tick.start();
         Main.window.setVisible(true);
     }
@@ -32,8 +47,15 @@ public class Title {
         @Override
         public void actionPerformed(ActionEvent e) {
             //add stuff for selecing options
+            if (Main.input.options){
+                titleDisplay(1);
+                System.out.println("options");
+            } if (!Main.input.options){
+                titleDisplay(0);
+            }
             if (Main.input.start){
                 try {
+                    Main.bgm.stop();
                     new GameFrame();
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
@@ -43,4 +65,9 @@ public class Title {
             }
         }
     });
+
+    private void titleDisplay(int i){
+        label.setIcon(title[i]);
+
+    }
 }

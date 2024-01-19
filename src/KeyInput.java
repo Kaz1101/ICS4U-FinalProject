@@ -3,7 +3,7 @@ import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
 
-    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, start, interact;
+    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, start, options, paused;
 
     /**
      * Written by Luka (things were added by both Christina and Graham)
@@ -14,10 +14,22 @@ public class KeyInput implements KeyListener {
         switch (Main.gameState) {
             case TITLE -> {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_ENTER -> {
-                        start = true;
+                    case KeyEvent.VK_K -> {
+                        options = true;
+                        Main.gameState = Main.GameState.HOWTO;
+                    }
+                    case KeyEvent.VK_ENTER ->{
+                        if (!options){
+                            start = true;
+                        }
                     }
                     case KeyEvent.VK_END -> System.exit(0);
+                }
+            }
+            case HOWTO -> {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_K) {
+                    options = false;
+                    Main.gameState = Main.GameState.TITLE;
                 }
             }
             case PLAY -> {
@@ -61,6 +73,18 @@ public class KeyInput implements KeyListener {
                         System.out.println("interact");
                         interact = true;
                         break;
+                    case KeyEvent.VK_ESCAPE:
+                        paused = true;
+                        Main.gameState = Main.GameState.PAUSED;
+                }
+            }
+            case PAUSED -> {
+                switch (e.getKeyCode()){
+                    case KeyEvent.VK_SPACE -> {
+                        paused = false;
+                        Main.gameState = Main.GameState.PLAY;
+                    }
+                    case KeyEvent.VK_ENTER -> System.exit(0);
                 }
             }
         }

@@ -56,7 +56,7 @@ public class Setup extends LoadedSprites {
             for (int i = 0; i < textureData[a].length; i++) {
                 for (int j = 0; j < textureData[a][0].length; j++) {
                     if (!tempText.contains(textureData[a][i][j])) {
-                        load(textureDir + textureData[a][i][j] + ".png", textureData[a][i][j], scaleX, scaleY);
+                        load(textureDir + textureData[a][i][j] + ".gif", textureData[a][i][j], scaleX, scaleY);
                     }
                 }
             }
@@ -104,6 +104,9 @@ public class Setup extends LoadedSprites {
     public void load(){
         try {
             load("data/TestMovementPics/movinggif.gif", "TestDummy", 500, 500);
+            load("data/assets/title.png", "main_title", Main.x, Main.y);
+            load("data/assets/tempPause.png", "tempPause", 650, 400);
+
             load("data/assets/Hongcha1.png", "booperdooper_UP_IDLE", 58, 86);
             load("data/assets/Hongcha.png", "booperdooper_UP_MOV", 58, 86);
             load("data/assets/Hongcha.png", "booperdooper_UP_INTERACT", 58, 86);
