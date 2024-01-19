@@ -45,7 +45,7 @@ public class GameFrame extends JPanel{
         public void actionPerformed(ActionEvent e) {
             switch (Main.gameState) {
                 case PLAY -> {
-                    if (pauseDisplay == 1){
+                    if (pauseDisplay == 1) {
                         Main.window.remove(pauseScreen);
                         Main.bgm.play();
                         Main.bgm.loop();
@@ -93,23 +93,26 @@ public class GameFrame extends JPanel{
                             }
                         }
                     }
-                } if (Setup.curMap == 1) {
-                    for (int i = 0; i < sub_game_objects.size(); i++) {
-                        GameObject obj = sub_game_objects.get(i);
-                        obj.doTick();
-                        if(obj.died()){
-                            game_objects.remove(obj);
+                    if (Setup.curMap == 1) {
+                        for (int i = 0; i < sub_game_objects.size(); i++) {
+                            GameObject obj = sub_game_objects.get(i);
+                            obj.doTick();
+                            if (obj.died()) {
+                                game_objects.remove(obj);
+                            }
                         }
                     }
-            }
 
 
-            if (p1.died()) {
-                game_over = true;
+                    if (p1.died()) {
+                        game_over = true;
+                    }
+                    repaint();
+                }
             }
-            repaint();
         }
     });
+
 
     /**
      * Written by Luka
