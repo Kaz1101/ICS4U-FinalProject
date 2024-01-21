@@ -55,6 +55,7 @@ public class GameObject extends JComponent {
     private int counter = 0;
     private int moveBackCount = 0;
     private static Random r = new Random();
+    private Rectangle hitbox = new Rectangle(0, 0, 0, 0);
 
 
     /**
@@ -82,7 +83,7 @@ public class GameObject extends JComponent {
                 yPos = Double.parseDouble(temp[13]);
                 xScale = Integer.parseInt(temp[14]);
                 yScale = Integer.parseInt(temp[15]);
-
+                hitbox = new Rectangle((int) xPos, (int) yPos, xScale, yScale);
                 if (Boolean.parseBoolean(temp[16])) {
                     interactables.add(this);
                 }
@@ -133,7 +134,9 @@ public class GameObject extends JComponent {
                 enemies.add(this);
                 ms = move_spd * r.nextDouble() + 0.5;
                 if(ms > move_spd){
-                    ms -= 0.7;
+                    ms -= move_spd * 0.4;
+                } else if(ms < move_spd * 0.45){
+                    ms += move_spd * 0.2;
                 }
                 break;
             case 2:
@@ -392,8 +395,8 @@ public class GameObject extends JComponent {
         pathfind.setNode(startRow, startCol, goalRow, goalCol);
 
         if (pathfind.search()) {
-            int nextX = pathfind.path.get(0).col * 100;
-            int nextY = pathfind.path.get(0).row * 100;
+            int nextX = pathfind.path.get(0).col * 100 + 50;
+            int nextY = pathfind.path.get(0).row * 100 + 50;
 
             int left = (int) xPos;
             int right = (int) xPos + xScale;
@@ -447,7 +450,7 @@ public class GameObject extends JComponent {
         switch(damage_type){
             case 1:
                 for(GameObject enemy : enemies){
-                    if(getDistance(this, enemy) < 10){
+                    if(getDistance(this, enemy) < 50){
                         enemy.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -455,7 +458,7 @@ public class GameObject extends JComponent {
                 break;
             case -1:
                 for(GameObject player : players){
-                    if(getDistance(this, player) < 10){
+                    if(getDistance(this, player) < 50){
                         player.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -463,14 +466,14 @@ public class GameObject extends JComponent {
         }
     }
 
-//    /**
-//     * Checks for if this object intersects with another object
-//     * @param o the other object to check collision with
-//     * @return true if the two objects intersect
-//     */
-//    private boolean touches(GameObject o) {
-//        return this.getBounds().intersects(o.getBounds());
-//    }
+    /**
+     * Checks for if this object's hitbox intersects with another object's hitbox
+     * @param o the other object to check collision with
+     * @return true if the two objects intersect
+     */
+    private boolean touches(GameObject o) {
+        return hitbox.getBounds().intersects(o.hitbox.getBounds());
+    }
 
     /**
      * Checks for if the current object is dead or not (is hp below 0), and sets is_dead to true if is dead
@@ -479,6 +482,20 @@ public class GameObject extends JComponent {
         if(cur_hp <= 0){
             is_dead = true;
         }
+    }
+
+    private boolean characterCollision(){
+        for(GameObject enemy : enemies){
+            if(enemy != this && touches(enemy)){
+                return true;
+            }
+        }
+        for(GameObject player : players){
+            if(player != this && touches(player)){
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -490,7 +507,19 @@ public class GameObject extends JComponent {
         cur_direction = Direction.UP;
         cur_action = Action.MOV;
         if(yPos - ms > 0 && collisionCheck()){
-                yPos -= ms;
+            switch(character_type) {
+                case 0, 1:
+                    hitbox.setLocation((int) xPos, (int) (yPos - ms));
+                    if (!characterCollision()) {
+                        yPos -= ms;
+                    } else {
+                        hitbox.setLocation((int) xPos, (int) yPos);
+                    }
+                    break;
+                case 4:
+                    yPos -= ms;
+                    break;
+            }
         }
     }
     /**
@@ -500,7 +529,19 @@ public class GameObject extends JComponent {
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
         if(yPos + yScale + ms < levelHeight && collisionCheck()){
-                yPos += ms;
+            switch(character_type) {
+                case 0, 1:
+                    hitbox.setLocation((int) xPos, (int) (yPos + ms));
+                    if (!characterCollision()) {
+                        yPos += ms;
+                    } else {
+                        hitbox.setLocation((int) xPos, (int) yPos);
+                    }
+                    break;
+                case 4:
+                    yPos += ms;
+                    break;
+            }
         }
     }
 
@@ -511,7 +552,18 @@ public class GameObject extends JComponent {
         cur_direction = Direction.LEFT;
         cur_action = Action.MOV;
         if(xPos - ms > 10 && collisionCheck()){
-            xPos -= ms;
+            switch(character_type) {
+                case 0, 1:
+                    hitbox.setLocation((int) (xPos - ms), (int) (yPos));
+                    if (!characterCollision()) {
+                        xPos -= ms;
+                    } else {
+                        hitbox.setLocation((int) xPos, (int) yPos);
+                    }
+                    break;
+                case 4:
+                    xPos -= ms;
+            }
         }
     }
     /**
@@ -521,8 +573,18 @@ public class GameObject extends JComponent {
         cur_direction = Direction.RIGHT;
         cur_action = Action.MOV;
         if(xPos + xScale + ms < levelWidth && collisionCheck()){
-            if(xPos - ms > 0 && collisionCheck()){
+            switch(character_type) {
+                case 0, 1:
+                    hitbox.setLocation((int) (xPos + ms), (int) yPos);
+                    if (!characterCollision()) {
+                        xPos += ms;
+                    } else {
+                        hitbox.setLocation((int) xPos, (int) yPos);
+                    }
+                    break;
+                case 4:
                     xPos += ms;
+                    break;
             }
         }
     }
@@ -537,19 +599,19 @@ public class GameObject extends JComponent {
         if (cur_atkcd / 1000 > atk_spd) {
             switch (dir) {
                 case "U":
-                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
+                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "u");
                     last_atkcd = System.currentTimeMillis();
                     break;
                 case "D":
-                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
+                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "d");
                     last_atkcd = System.currentTimeMillis();
                     break;
                 case "L":
-                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
+                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "l");
                     last_atkcd = System.currentTimeMillis();
                     break;
                 case "R":
-                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
+                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "r");
                     last_atkcd = System.currentTimeMillis();
                     break;
             }
@@ -567,16 +629,16 @@ public class GameObject extends JComponent {
         if (cur_atkcd / 1000 > atk_spd && withinAttackRange()) {
             switch (cur_direction) {
                 case UP:
-                    GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "u");
+                    GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "u");
                     last_atkcd = System.currentTimeMillis();
                     break;
-                case DOWN: GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "d");
+                case DOWN: GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "d");
                     last_atkcd = System.currentTimeMillis();
                     break;
-                case LEFT: GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "l");
+                case LEFT: GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "l");
                     last_atkcd = System.currentTimeMillis();
                     break;
-                case RIGHT: GameFrame.addObject(atk_dmg, damage_type, atk_type, object_id, xPos, yPos, "r");
+                case RIGHT: GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "r");
                     last_atkcd = System.currentTimeMillis();
                     break;
             }
@@ -609,22 +671,22 @@ public class GameObject extends JComponent {
         GameObject player = players.get(0);
         switch(cur_direction){
             case UP:
-                if(Math.abs(xPos - player.xPos) < 20){
+                if(Math.abs(xPos - player.xPos) < 50){
                     return yPos - player.yPos < atk_range;
                 }
                 break;
             case DOWN:
-                if(Math.abs(xPos - player.xPos) < 20){
+                if(Math.abs(xPos - player.xPos) < 50){
                     return player.yPos - yPos < atk_range;
                 }
                 break;
             case LEFT:
-                if(Math.abs(yPos - player.yPos) < 20){
+                if(Math.abs(yPos - player.yPos) < 50){
                     return xPos - player.xPos < atk_range;
                 }
                 break;
             case RIGHT:
-                if(Math.abs(yPos - player.yPos) < 20){
+                if(Math.abs(yPos - player.yPos) < 50){
                     return player.yPos - yPos < atk_range;
                 }
                 break;
@@ -786,8 +848,8 @@ public class GameObject extends JComponent {
      */
     public void draw(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(character_type) {
-            case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, null); break;
-            case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null); break;
+            case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
+            case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
             case 3: gr.drawImage(LoadedSprites.pullTexture(object_id), drawX, drawY, xScale, yScale, null); break;
             case 4: gr.drawImage(LoadedSprites.pullTexture(object_id + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
@@ -863,6 +925,10 @@ public class GameObject extends JComponent {
      */
     public double getDistance(GameObject x, GameObject y) {
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
+    }
+
+    public double getDistance(GameObject x){
+        return Math.sqrt(Math.pow(xPos + (double)xScale / 2 - x.xPos + (double) x.xScale / 2, 2) + Math.pow(yPos + (double) yScale / 2 - x.yPos + (double)x.yScale, 2));
     }
 
     /**
