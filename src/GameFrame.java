@@ -16,6 +16,7 @@ public class GameFrame extends JPanel{
     /**
      * Refreshes window to now initialize and display the game with any necessary objects
      * @throws IOException
+     * @author Luka
      */
     public GameFrame() throws IOException {
         Main.window.getContentPane().removeAll();
@@ -38,9 +39,9 @@ public class GameFrame extends JPanel{
 
 
     /**
-     * Written by Luka, with things added by Graham and Christina
      * Timer that calls corresponding methods for all player inputs and calls doTick() for every object
      * Runs through every 10 milliseconds and performs appropriate actions
+     * @author Luka, Graham, minor adjustments by Christina
      */
     Timer tick = new Timer(10, new ActionListener() {
         @Override
@@ -101,6 +102,10 @@ public class GameFrame extends JPanel{
         }
     });
 
+    /**
+     * Loops through corresponding list to call doTick for each object
+     * @param list the list of objects in the current map
+     */
     private void ticks(ArrayList<GameObject> list){
         for (int i = 0; i < list.size(); i++) {
             GameObject obj = list.get(i);
@@ -115,11 +120,11 @@ public class GameFrame extends JPanel{
 
 
     /**
-     * Written by Luka
      * The thing that controlls graphics and draws everything on screen
      * Houses the map painting functions and calculations (only paints within a certain distance around players for efficient painting)
      * Sends Graphics component to respective GameObject methods that require them to draw objects and player
      * @param g the <code>Graphics</code> object to protect
+     * @author Luka
      */
     @Override
     public void paintComponent(Graphics g){
@@ -195,6 +200,7 @@ public class GameFrame extends JPanel{
      * Creates and adds a GameObject to the GameObject arraylist
      * @param s a string array that contains information of the object that is created
      * @param map the specific map that this object should be added to
+     * @author Christina, adjusted by Luka
      */
     public static void addObject(String[] s, int map) {
         switch (map) {
@@ -209,6 +215,7 @@ public class GameFrame extends JPanel{
      * @param damage_type which character type this attack is useful against
      * @param atk_type ranged or melee attack
      * @param character_id which character's attack animation to pull
+     * @author Christina, adjusted by Luka
      */
     public static void addObject(int atk_dmg, int damage_type, int atk_type, String character_id, double x, double y, String d){
         switch (Setup.curMap) {
@@ -219,9 +226,9 @@ public class GameFrame extends JPanel{
 
 
     /**
-     * Written by Luka
      * Takes objects to be initialized from a csv, then initializes them and adds them to the GameObject arrays
      * @throws IOException
+     * @author Luka
      */
     private void loadLooseObj() throws IOException {
         String[] loose = RWFile.readGeneral("data/objectData/objectList");

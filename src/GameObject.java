@@ -64,9 +64,9 @@ public class GameObject extends JComponent {
 
 
     /**
-     * @author Christina, adjusted by Luka
      * Sets up and initializes variables based on object data given from a csv file
      * @param temp a String array consisting of data for specific object being loaded
+     * @author Christina, adjustments by Luka
      */
     public GameObject(String[] temp) {
         character_type = Integer.parseInt(temp[0]);
@@ -163,7 +163,6 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * @author Christina
      * Constructor for attack objects
      * @param atk_dmg the damage that this object deals
      * @param damage_type the type of character that released this attack
@@ -172,6 +171,7 @@ public class GameObject extends JComponent {
      * @param xPos x position of the character that released this attack
      * @param yPos the y position of the character that released this attack
      * @param dir the direction the character is facing when releasing this attack
+     * @author Christina
      */
     public GameObject(int atk_dmg, int damage_type, int atk_type, String character_id, double xPos, double yPos, String dir){
         this.atk_dmg = atk_dmg;
@@ -211,8 +211,8 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * @author Christina, Luka
      * The method that gets called for each timer tick, checks for and refreshes object status
+     * @author Christina, Luka
      */
     public void doTick(){
         switch(character_type) {
@@ -254,12 +254,20 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Refreshes to see if current xp meets the need to level up
+     * @author Christina
+     */
     private void refreshXP() {
         if(cur_xp >= next_xp){
             levelUp();
         }
     }
 
+    /**
+     * Increases character level, also adds to damage scale and refreshes next amount of xp needed
+     * @author Christina
+     */
     private void levelUp(){
         level += 1;
         dmg_boost += 0.1;
@@ -268,8 +276,8 @@ public class GameObject extends JComponent {
 
 
     /**
-     * @author Christina
      * Kills the object calling this method by taking away max hp
+     * @author Christina
      */
     private void kill() {
         if(getDistance(this, players.get(0)) > scrX * 2 ||! collisionCheck()){
@@ -281,14 +289,19 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Forcefully kills the object passed into parameter
+     * @param o the object wanted to kill
+     * @author Christina
+     */
     private void kill(GameObject o){
         o.cur_hp -= max_hp;
         o.die();
     }
 
     /**
-     * @author Christina
      * Movement for attack objects that keeps them moving in a straight line
+     * @author Christina
      */
     private void moveForward() {
         switch(cur_direction){
@@ -300,8 +313,8 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * @author Luka
      * Basic code for idle npcs where they move slightly every approx 1 sec
+     * @author Luka
      */
     private void idle(){
         counter ++;
@@ -318,9 +331,9 @@ public class GameObject extends JComponent {
 
 
     /**
-     * @author Luka
      * Basic code that makes npcs move back and forth
      * @param spd the npc's speed (quarter of player speed)
+     * @author Luka
      */
     private void lrMove(double spd){
             if (cur_direction == Direction.LEFT) {
@@ -399,7 +412,7 @@ public class GameObject extends JComponent {
     }
 
     /**
-     *
+     * Pathfinding that searches for shortest path to reach destination
      * @param goalRow the y coordinate of the destination
      * @param goalCol the x coordinate of the destination
      */
@@ -459,7 +472,9 @@ public class GameObject extends JComponent {
     }
 
     /**
+     * For attacks only:
      * Checks for if the opposite character type from the attacker is within range, and deals damage if collides
+     * @author Christina
      */
     private void do_damage() {
         switch(damage_type){
@@ -485,6 +500,7 @@ public class GameObject extends JComponent {
      * Checks for if this object's hitbox intersects with another object's hitbox
      * @param o the other object to check collision with
      * @return true if the two objects intersect
+     * @author Christina
      */
     private boolean touches(GameObject o) {
         return hitbox.getBounds().intersects(o.hitbox.getBounds());
@@ -492,6 +508,7 @@ public class GameObject extends JComponent {
 
     /**
      * Checks for if the current object is dead or not (is hp below 0), and sets is_dead to true if is dead
+     * @author Christina
      */
     private void die() {
         if(cur_hp <= 0){
@@ -499,6 +516,11 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Checks for if this object's hitbox collides with another object's hitbox
+     * @return true if the two collides
+     * @author Christina
+     */
     private boolean characterCollision(){
         for(GameObject enemy : enemies){
             if(enemy != this && touches(enemy)){
@@ -517,6 +539,7 @@ public class GameObject extends JComponent {
     //Movement methods created by Christina(?) and edited by Luka
     /**
      * Checks for current y position, if within map boarders from the top and is not moving into an object with collision, moves up.
+     * @author Christina
      */
     public void moveUp(){
         cur_direction = Direction.UP;
@@ -540,6 +563,7 @@ public class GameObject extends JComponent {
     }
     /**
      * Checks for current y position, if within boarders from the bottom and is not moving into an object with collision, moves up.
+     * @author Christina
      */
     public void moveDown(){
         cur_direction = Direction.DOWN;
@@ -564,6 +588,7 @@ public class GameObject extends JComponent {
 
     /**
      * Checks for current x position, if within boarders from the left side and is not moving into an object with collision, moves left.
+     * @author Christina
      */
     public void moveLeft(){
         cur_direction = Direction.LEFT;
@@ -587,6 +612,7 @@ public class GameObject extends JComponent {
     }
     /**
      * Checks for current x position, if within boarders from the right side and is not moving into an object with collision, moves right.
+     * @author Christina
      */
     public void moveRight(){
         cur_direction = Direction.RIGHT;
@@ -613,6 +639,7 @@ public class GameObject extends JComponent {
      * Attack for player, checks for attack key input direction and creates an attack object facing the same direction
      * also checks for if time between attacks is long enough
      * @param dir direction of the attack
+     * @author Christina
      */
     public void attack(String dir){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
@@ -644,6 +671,7 @@ public class GameObject extends JComponent {
     /**
      * Attack for enemies, checks for if player is within attack range and attacks if true
      * attacks are in the direction that the enemies are facing
+     * @author Christina
      */
     private void attack(){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
@@ -669,6 +697,7 @@ public class GameObject extends JComponent {
     /**
      * Checks for if player is within the attack range of the enemy character
      * @return true if player is within attack range of this enemy object
+     * @author Christina
      */
     private boolean withinAttackRange() {
         double atk_range = 0;
@@ -687,6 +716,7 @@ public class GameObject extends JComponent {
      * Gets the range of the player compared to this enemy object and compares to attack range
      * @param atk_range the range of the attack
      * @return true if player is within attack range
+     * @author Christina
      */
     private boolean getRange(double atk_range){
         GameObject player = players.get(0);
@@ -716,8 +746,8 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * @author Graham, edited by Luka
      * getting objects in range and then triggering the doInteract() function
+     * @author Graham, edited by Luka
      */
     public void interact() {
         for (GameObject intractable : interactables) {
@@ -735,8 +765,8 @@ public class GameObject extends JComponent {
     }
 
     /**
+     *completing object specific interactions depending on object type
      * @author Graham
-     * completing object specific interactions depending on object type
      */
     private void doInteract() {
         switch (type) {
@@ -757,6 +787,7 @@ public class GameObject extends JComponent {
     /**
      * Takes away from this object's current hp
      * @param dmg the amount of damage the other object deals
+     * @author Christina
      */
     public void takeDamage(double dmg){
         cur_action = Action.DMG;
@@ -778,6 +809,7 @@ public class GameObject extends JComponent {
 
     /**
      * Updates all cooldowns for this object for each tick time
+     * @author Christina
      */
     private void refreshCD(){
         if (cur_cd - 10 > 0) {
@@ -799,15 +831,12 @@ public class GameObject extends JComponent {
     }
 
 
-    public void showAttackAnimation(){
-
-    }
 
 
     /**
-     * Written by Luka
      * Find the tile the player is currently on, as of now only used for testing and debugging
      * @return the tile type the player is on
+     * @author Luka
      */
     public String getTile(){
         int x = 0;
@@ -830,9 +859,9 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * Written by Luka
      * Checks for tile in front of player to see if it has collision or not
-     * @return the collision status of tile in front of player
+     * @return true if the tile in front has collision enabled
+     * @author Luka
      */
     public boolean collisionCheck(){
         int toTouch;
@@ -861,11 +890,11 @@ public class GameObject extends JComponent {
 
 
     /**
-     * Written by Luka
      * Draws any on-screen objects including the player
      * @param gr Graphics2D component passed from paintComponent
      * @param drawX x position of non-player objects on map
      * @param drawY y position of non-player objects on map
+     * @author Luka
      */
     public void draw(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(character_type) {
@@ -877,9 +906,9 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * Written by Luka
      * Checks to see if object is within visible bounds of screen
-     * @param gr Graphics2d component passed from paintComponent - to be passed to "draw" method
+     * @param gr Graphics2D component passed from paintComponent - to be passed to "draw" method
+     * @author Luka
      */
     public void renderCheck(Graphics2D gr){
         double playerX = players.get(0).xPos;
@@ -897,6 +926,11 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Draws the player status overlay
+     * @param gr the graphics thing
+     * @author Luka
+     */
     public void drawOverlay(Graphics2D gr){
         gr.setColor(Color.white);
         gr.fillRect(20, Main.y - 200,400, 170);
@@ -925,6 +959,7 @@ public class GameObject extends JComponent {
     /**
      * Saves all data for this object.
      * @return a double array that contains all field data of this object.
+     * @author Graham or Luka idk
      */
     public String[] saveData() {
         return new String[]{Integer.toString(character_type), Double.toString(max_hp), Double.toString(cur_hp), Double.toString(atk_dmg), Double.toString(atk_spd), Integer.toString(atk_type), Double.toString(ap), Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), object_id};
@@ -932,14 +967,13 @@ public class GameObject extends JComponent {
 
 
     /**
-     *
      * @return the object ID of this object
      */
     public String getObjectID() {
         return object_id;
     }
 
-    //we might not need these
+    //we might need these for setting location of randomly spawned enemies
     public void setxPos(double x){
         xPos = x;
     }
@@ -949,20 +983,17 @@ public class GameObject extends JComponent {
     }
 
     /**
-     * @author Graham
      * checking distance between objects for interactions and other things
+     * @author Graham
      */
     public double getDistance(GameObject x, GameObject y) {
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
-    public double getDistance(GameObject x){
-        return Math.sqrt(Math.pow(xPos + (double)xScale / 2 - x.xPos + (double) x.xScale / 2, 2) + Math.pow(yPos + (double) yScale / 2 - x.yPos + (double)x.yScale, 2));
-    }
 
     /**
-     *
-     * @return the status of the current object, if it is dead or not
+     * @return the status of the current object, if it is dead or not, and adds to player's xp bar if an enemy is defeated
+     * @author Christina
      */
     public boolean died() {
         if(is_dead && character_type == 1){
