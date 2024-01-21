@@ -56,6 +56,11 @@ public class GameObject extends JComponent {
     private int moveBackCount = 0;
     private static Random r = new Random();
     private Rectangle hitbox = new Rectangle(0, 0, 0, 0);
+    private double cur_xp = 0;
+    private double[] xps = {0, 100, 500, 1200, 2000, 2800, 3600, 4500}; //havent finalized xp amount and gain
+    private double next_xp = xps[1];
+    private int level = 1;
+    private double dmg_boost = 1; //multiplier
 
 
     /**
@@ -132,12 +137,7 @@ public class GameObject extends JComponent {
                 pathfinding = true;
 
                 enemies.add(this);
-                ms = move_spd * r.nextDouble() + 0.5;
-                if(ms > move_spd){
-                    ms -= move_spd * 0.4;
-                } else if(ms < move_spd * 0.45){
-                    ms += move_spd * 0.2;
-                }
+                ms = move_spd * 0.75;
                 break;
             case 2:
                 type = ObjectType.NPC;
@@ -192,6 +192,7 @@ public class GameObject extends JComponent {
             case "l": cur_direction = Direction.LEFT; break;
             case "r": cur_direction = Direction.RIGHT; break;
         }
+        hitbox = new Rectangle((int) xPos, (int) yPos, xScale, yScale);
     }
 
 
@@ -217,12 +218,14 @@ public class GameObject extends JComponent {
         switch(character_type) {
             case 0:
                 refreshCD();
+                refreshXP();
                 //useAbility();
                 die();
                 break;
             case 1:
                 if (pathfinding) searchPath((int)players.get(0).yPos / 100, (int)players.get(0).xPos / 100);
                 attack();
+                die();
                 break;
             case 2:
                 switch (npcType) {
@@ -249,6 +252,18 @@ public class GameObject extends JComponent {
                 break;
 
         }
+    }
+
+    private void refreshXP() {
+        if(cur_xp >= next_xp){
+            levelUp();
+        }
+    }
+
+    private void levelUp(){
+        level += 1;
+        dmg_boost += 0.1;
+        next_xp = xps[level];
     }
 
 
@@ -450,7 +465,7 @@ public class GameObject extends JComponent {
         switch(damage_type){
             case 1:
                 for(GameObject enemy : enemies){
-                    if(getDistance(this, enemy) < 50){
+                    if(touches(enemy)){
                         enemy.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -458,7 +473,7 @@ public class GameObject extends JComponent {
                 break;
             case -1:
                 for(GameObject player : players){
-                    if(getDistance(this, player) < 50){
+                    if(touches(player)){
                         player.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -518,6 +533,7 @@ public class GameObject extends JComponent {
                     break;
                 case 4:
                     yPos -= ms;
+                    hitbox.setLocation((int) xPos, (int) yPos);
                     break;
             }
         }
@@ -540,6 +556,7 @@ public class GameObject extends JComponent {
                     break;
                 case 4:
                     yPos += ms;
+                    hitbox.setLocation((int) xPos, (int) yPos);
                     break;
             }
         }
@@ -563,6 +580,8 @@ public class GameObject extends JComponent {
                     break;
                 case 4:
                     xPos -= ms;
+                    hitbox.setLocation((int) xPos, (int) yPos);
+                    break;
             }
         }
     }
@@ -584,6 +603,7 @@ public class GameObject extends JComponent {
                     break;
                 case 4:
                     xPos += ms;
+                    hitbox.setLocation((int) xPos, (int) yPos);
                     break;
             }
         }
@@ -597,21 +617,22 @@ public class GameObject extends JComponent {
     public void attack(String dir){
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
         if (cur_atkcd / 1000 > atk_spd) {
+            int ad = (int) (atk_dmg * dmg_boost);
             switch (dir) {
                 case "U":
-                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "u");
+                    GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "u");
                     last_atkcd = System.currentTimeMillis();
                     break;
                 case "D":
-                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "d");
+                    GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "d");
                     last_atkcd = System.currentTimeMillis();
                     break;
                 case "L":
-                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "l");
+                    GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "l");
                     last_atkcd = System.currentTimeMillis();
                     break;
                 case "R":
-                    GameFrame.addObject(atk_dmg, 1, atk_type, object_id, xPos, yPos, "r");
+                    GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "r");
                     last_atkcd = System.currentTimeMillis();
                     break;
             }
@@ -878,16 +899,24 @@ public class GameObject extends JComponent {
 
     public void drawOverlay(Graphics2D gr){
         gr.setColor(Color.white);
-        gr.fillRect(20, Main.y - 150,400, 120);
+        gr.fillRect(20, Main.y - 200,400, 170);
         gr.setColor(Color.black);
-        gr.fillRect(25, Main.y - 145,390, 110);
+        gr.fillRect(25, Main.y - 195,390, 160);
         gr.setFont(new Font("Calibri Bold", Font.PLAIN, 26));
         gr.setColor(Color.white);
         gr.drawString("HP", 50, Main.y - 100);
+        gr.drawString("XP", 50, Main.y - 55);
+        gr.drawString("LEVEL == " + level, 50, Main.y - 145);
         gr.setColor(Color.gray);
         gr.fillRect(100, Main.y - 120, 200, 25);
+        gr.fillRect(100, Main.y - 75, 200, 25);
+        gr.setColor(Color.blue);
+        gr.fillRect(100, Main.y - 75, (int) (cur_xp / next_xp * 200), 25);
         gr.setColor(Color.red);
         gr.fillRect(100, Main.y - 120, (int) (cur_hp / max_hp * 200), 25);
+        gr.setColor(Color.white);
+        gr.drawString(cur_xp + "/" + next_xp, 110, Main.y - 55);
+        gr.drawString(cur_hp + "/" + max_hp, 110, Main.y - 100);
         System.out.println(cur_hp);
 
 
@@ -936,6 +965,12 @@ public class GameObject extends JComponent {
      * @return the status of the current object, if it is dead or not
      */
     public boolean died() {
+        if(is_dead && character_type == 1){
+            players.get(0).cur_xp += 50;
+        }
+        if(is_dead){
+            hitbox.setLocation(0, 0); //throw into waste corner
+        }
         return is_dead;
     }
 

@@ -23,6 +23,8 @@ public class GameFrame extends JPanel{
         Setup.curMap = 0;
         this.setBackground(Color.black);
         p1 = new GameObject(RWFile.readInitialFile("booperdooper"));
+        game_objects.add(p1);
+        sub_game_objects.add(p1);
         loadLooseObj();
         this.revalidate();
         this.repaint();
@@ -83,24 +85,10 @@ public class GameFrame extends JPanel{
                         p1.interact();
                     }
                     if (Setup.curMap == 0) {
-                        for (int i = 0; i < game_objects.size(); i++) {
-                            GameObject obj = game_objects.get(i);
-                            obj.cur_action = GameObject.Action.IDLE;
-                            obj.doTick();
-                            if (obj.died()) {
-                                game_objects.remove(obj);
-                                i--;
-                            }
-                        }
+                        ticks(game_objects);
                     }
                     if (Setup.curMap == 1) {
-                        for (int i = 0; i < sub_game_objects.size(); i++) {
-                            GameObject obj = sub_game_objects.get(i);
-                            obj.doTick();
-                            if (obj.died()) {
-                                game_objects.remove(obj);
-                            }
-                        }
+                        ticks(sub_game_objects);
                     }
 
 
@@ -112,6 +100,18 @@ public class GameFrame extends JPanel{
             }
         }
     });
+
+    private void ticks(ArrayList<GameObject> list){
+        for (int i = 0; i < list.size(); i++) {
+            GameObject obj = list.get(i);
+            obj.cur_action = GameObject.Action.IDLE;
+            obj.doTick();
+            if (obj.died()) {
+                list.remove(obj);
+                i--;
+            }
+        }
+    }
 
 
     /**
