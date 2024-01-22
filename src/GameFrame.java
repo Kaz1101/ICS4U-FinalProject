@@ -48,7 +48,7 @@ public class GameFrame extends JPanel{
         @Override
         public void actionPerformed(ActionEvent e) {
             switch (Main.gameState) {
-                case PLAY -> {
+                case PLAY, BOSSFIGHT -> {
                     if (pauseDisplay == 1) {
                         Main.window.remove(pauseScreen);
                         Main.bgm.play();

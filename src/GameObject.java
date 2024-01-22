@@ -55,7 +55,6 @@ public class GameObject extends JComponent {
     public PathfindAI pathfind = new PathfindAI();
     public boolean pathfinding = false;
     private int counter = 0;
-    private int moveBackCount = 0;
     private static Random r = new Random();
     private Rectangle hitbox = new Rectangle(0, 0, 0, 0);
     private double cur_xp = 0;
@@ -359,7 +358,7 @@ public class GameObject extends JComponent {
                     cur_direction = Direction.LEFT;
                 }
             }
-            moveBackCount = 0;
+
     }
 
 
@@ -471,12 +470,6 @@ public class GameObject extends JComponent {
                     moveRight();
                 }
             }
-
-//            int nextRow = pathfind.path.get(0).row;
-//            int nextCol = pathfind.path.get(0).col;
-//            if (nextCol == goalCol && nextRow == goalRow){
-//                pathfinding = false;
-//            }
         }
     }
 

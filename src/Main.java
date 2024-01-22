@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class Main {
-    public enum GameState {TITLE, HOWTO, OPTIONS, PLAY, PAUSED}
+    public enum GameState {TITLE, HOWTO, OPTIONS, PLAY, PAUSED, BOSSFIGHT}
     public static GameState gameState;
     public static JFrame window = new JFrame();
     public static KeyInput input;
