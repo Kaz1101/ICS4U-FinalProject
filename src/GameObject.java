@@ -2,6 +2,8 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -39,7 +41,7 @@ public class GameObject extends JComponent {
     public double max_hp; //max health points
     public double cur_hp; //current health points
     private int atk_dmg, atk_spd;
-    private int atk_type; //-1 = melee, 1 = ranged
+    private int atk_type; //-1 = melee, 1 = ranged, 0 = spawner
     private double ap;  //ability power that is used as base effectiveness of ability
     private int damage_type; // -1 = enemy's, 1 = player's
     private long cur_cd, cur_atkcd, last_atkcd; //current cd countdown
@@ -137,7 +139,11 @@ public class GameObject extends JComponent {
                 pathfinding = true;
 
                 enemies.add(this);
-                ms = move_spd * 0.75;
+                if(atk_type == 0){
+                    ms = 0;
+                } else {
+                    ms = move_spd * 0.75;
+                }
                 break;
             case 2:
                 type = ObjectType.NPC;
@@ -214,7 +220,7 @@ public class GameObject extends JComponent {
      * The method that gets called for each timer tick, checks for and refreshes object status
      * @author Christina, Luka
      */
-    public void doTick(){
+    public void doTick() throws FileNotFoundException {
         switch(character_type) {
             case 0:
                 refreshCD();
@@ -271,6 +277,8 @@ public class GameObject extends JComponent {
     private void levelUp(){
         level += 1;
         dmg_boost += 0.1;
+        max_hp += 70;
+        cur_hp += 70;
         next_xp = xps[level];
     }
 
@@ -283,7 +291,7 @@ public class GameObject extends JComponent {
         if(getDistance(this, players.get(0)) > scrX * 2 ||! collisionCheck()){
             cur_hp -= max_hp;
             die();
-        } if (character_type == 4 && (xPos + xScale + move_spd >= levelWidth || xPos - move_spd <= 0 || yPos + yScale + move_spd >= levelHeight || yPos - move_spd <= 0)){
+        } if (character_type == 4 && (xPos + xScale + move_spd >= levelWidth || xPos - move_spd <= 20 || yPos + yScale + move_spd >= levelHeight || yPos - move_spd <= 0 || getDistance(this, players.get(0)) > scrX)){
             cur_hp -= max_hp;
             die();
         }
@@ -664,6 +672,7 @@ public class GameObject extends JComponent {
                     break;
             }
         }
+        last_atkcd = cur_atkcd;
         System.out.println(cur_atkcd);
         System.out.println(last_atkcd);
     }
@@ -673,25 +682,41 @@ public class GameObject extends JComponent {
      * attacks are in the direction that the enemies are facing
      * @author Christina
      */
-    private void attack(){
+    private void attack() throws FileNotFoundException {
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
         if (cur_atkcd / 1000 > atk_spd && withinAttackRange()) {
-            switch (cur_direction) {
-                case UP:
-                    GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "u");
+            switch (atk_type) {
+                case -1, 1:
+                    switch (cur_direction) {
+                        case UP:
+                            GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "u");
+                            last_atkcd = System.currentTimeMillis();
+                            break;
+                        case DOWN:
+                            GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "d");
+                            last_atkcd = System.currentTimeMillis();
+                            break;
+                        case LEFT:
+                            GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "l");
+                            last_atkcd = System.currentTimeMillis();
+                            break;
+                        case RIGHT:
+                            GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "r");
+                            last_atkcd = System.currentTimeMillis();
+                            break;
+                    }
+                    break;
+                case 0:
+                    Scanner s = new Scanner(new File("data/objectData/enemyTest.csv"));
+                    String[] data = s.nextLine().split(",");
+                    s.close();
+                    GameFrame.addObject(data, 0);
                     last_atkcd = System.currentTimeMillis();
                     break;
-                case DOWN: GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "d");
-                    last_atkcd = System.currentTimeMillis();
-                    break;
-                case LEFT: GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "l");
-                    last_atkcd = System.currentTimeMillis();
-                    break;
-                case RIGHT: GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "r");
-                    last_atkcd = System.currentTimeMillis();
-                    break;
+
             }
         }
+
     }
 
     /**
@@ -704,6 +729,7 @@ public class GameObject extends JComponent {
         switch(atk_type){
             case -1: atk_range = 50; break;
             case 1: atk_range = 500; break;
+            case 0: atk_range = 2000; break;
         }
         for(GameObject player : players) {
             return getRange(atk_range);
@@ -720,6 +746,9 @@ public class GameObject extends JComponent {
      */
     private boolean getRange(double atk_range){
         GameObject player = players.get(0);
+        if(atk_type == 0){
+            return getDistance(this, player) < atk_range;
+        }
         switch(cur_direction){
             case UP:
                 if(Math.abs(xPos - player.xPos) < 50){

@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -86,10 +87,18 @@ public class GameFrame extends JPanel{
                         p1.interact();
                     }
                     if (Setup.curMap == 0) {
-                        ticks(game_objects);
+                        try {
+                            ticks(game_objects);
+                        } catch (FileNotFoundException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                     if (Setup.curMap == 1) {
-                        ticks(sub_game_objects);
+                        try {
+                            ticks(sub_game_objects);
+                        } catch (FileNotFoundException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
 
 
@@ -106,10 +115,9 @@ public class GameFrame extends JPanel{
      * Loops through corresponding list to call doTick for each object
      * @param list the list of objects in the current map
      */
-    private void ticks(ArrayList<GameObject> list){
+    private void ticks(ArrayList<GameObject> list) throws FileNotFoundException {
         for (int i = 0; i < list.size(); i++) {
             GameObject obj = list.get(i);
-            obj.cur_action = GameObject.Action.IDLE;
             obj.doTick();
             if (obj.died()) {
                 list.remove(obj);

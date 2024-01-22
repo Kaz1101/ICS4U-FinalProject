@@ -13,10 +13,7 @@ public class BooperDooper extends GameObject {
 
     }
 
-    @Override
-    public void showAttackAnimation() {
 
-    }
 
 
 }

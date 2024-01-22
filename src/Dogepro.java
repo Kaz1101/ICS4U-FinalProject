@@ -11,8 +11,5 @@ public class Dogepro extends GameObject{
 
     }
 
-    @Override
-    public void showAttackAnimation() {
 
-    }
 }
