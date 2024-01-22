@@ -3,7 +3,6 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class Setup extends LoadedSprites {
-    public static int curMap;
     public String textureDir;
     public static String[][][] textureData;
     public static boolean[][][] collisionData;
@@ -23,11 +22,11 @@ public class Setup extends LoadedSprites {
         colMax = new int[mapCount];
         rowMax = new int[mapCount];
         textureData = new String[mapCount][][];
-         for (int i = 0; i < mapCount; i++) {
-             processQueue[i] = new File(mapDir + i + ".csv");
- //            File mapLoose = new File(mapDir.getAbsolutePath() + "loose.csv");
-         }
-       // loose = mapLoose;
+        for (int i = 0; i < mapCount; i++) {
+            processQueue[i] = new File(mapDir + i + ".csv");
+            //            File mapLoose = new File(mapDir.getAbsolutePath() + "loose.csv");
+        }
+        // loose = mapLoose;
         textureDir = textureFolder;
     }
 
@@ -71,7 +70,7 @@ public class Setup extends LoadedSprites {
      */
     public void collisionTiles() throws IOException{
         BufferedReader read = new BufferedReader(new FileReader("data/map/collisionTiles.csv"));
-         mapCollision(read.readLine().split(","));
+        mapCollision(read.readLine().split(","));
     }
 
     /**
@@ -106,7 +105,7 @@ public class Setup extends LoadedSprites {
             load("data/assets/title.png", "main_title", Main.x, Main.y);
             load("data/assets/tempPause.png", "tempPause", 650, 400);
 
-            load("data/assets/Hongcha1.png", "booperdooper_UP_IDLE", 58, 86);
+            load("data/assets/booperdooper_idleD.png", "booperdooper_UP_IDLE", 58, 86);
             load("data/assets/booperdooper_runD.gif", "booperdooper_UP_MOV", 58, 86);
             load("data/assets/Hongcha.png", "booperdooper_UP_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleL.png", "booperdooper_LEFT_IDLE", 58, 86);
@@ -132,6 +131,8 @@ public class Setup extends LoadedSprites {
             load("data/assets/booperdooper_runR.gif", "npc2_RIGHT_MOV", 58, 86);
 
             load("data/assets/house1.png", "house1", 200, 200);
+            load("data/assets/sitinglog1.png", "potion", 100,100);
+            load("data/assets/tree1.png", "spdBoost", 100,100);
 
             loadMapTextures();
         } catch (IOException e) {

@@ -36,29 +36,61 @@ public class RWFile {
      * Write the current state of the GameCharacter object into a csv file
      * @param character a GameCharacter object that we want to save the character file for
      */
-    public void writeData(GameObject character) {
+    public static void writeData(GameObject character) {
         String name = character.getObjectID();
         File f = new File("data/saveData/" + name + ".csv");
         try(BufferedWriter buffer = new BufferedWriter(new FileWriter(f))) {
-            buffer.write(Arrays.toString(character.saveData()));
+            buffer.write(Arrays.toString(character.saveData()).replace("[", "").replace(" ", "").replace("]", ""));
+        } catch (IOException cant_code) {
+            System.out.println("welp ʅ( ･´‸･｀)ʃ");
+        }
+    }
+
+    public static void writeInventory(Inventory inv){
+        File f = new File("data/saveData/inventory.csv");
+        String[] temp = new String[inv.inventorySpace.size()];
+        for (int i = 0; i < inv.inventorySpace.size(); i++){
+            temp[i] = inv.inventorySpace.get(i).getObjectID();
+        }
+        try(BufferedWriter buffer = new BufferedWriter(new FileWriter(f))) {
+            buffer.write(Arrays.toString(temp).replace("[", "").replace(" ", "").replace("]", ""));
         } catch (IOException cant_code) {
             System.out.println("welp ʅ( ･´‸･｀)ʃ");
         }
     }
 
 
-
-    public ArrayList<String> readData(GameObject character) {
-        String name = character.getObjectID();
+    public static String[] readData(String name) {
         File f = new File("data/saveData/" + name + ".csv");
-        ArrayList<String> saveData = new ArrayList<>();
+//        ArrayList<String> saveData = new ArrayList<>();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(f));
-            saveData.add(Arrays.toString(reader.readLine().split(",")));
+            String temp = reader.readLine();
+            if (temp != null) {
+                return temp.split(",");
+            }
         } catch (IOException you_suck_at_coding_not_me){
 //            new OopsiePoopsie();
             System.out.println("...man");
         }
-        return saveData;
+        return null;
+    }
+
+    public static void updateList(){
+        File f = new File("data/saveData/objectList.csv");
+        ArrayList<String> temp = new ArrayList<>();
+        try(BufferedWriter buffer = new BufferedWriter(new FileWriter(f))) {
+            for (GameObject obj : GameFrame.game_objects){
+                temp.add(obj.getObjectID());
+                temp.add("0");
+            }
+            for (GameObject obj : GameFrame.sub_game_objects){
+                temp.add(obj.getObjectID());
+                temp.add("1");
+            }
+            buffer.write(Arrays.toString(temp.toArray()).replace("[", "").replace(" ", "").replace("]", ""));
+        } catch (IOException cant_code) {
+            System.out.println("welp ʅ( ･´‸･｀)ʃ");
+        }
     }
 }

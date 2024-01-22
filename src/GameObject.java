@@ -1,20 +1,18 @@
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.*;
 
 
 public class GameObject extends JComponent {
     private enum Direction {LEFT, RIGHT, UP, DOWN}
-    private enum ObjectType {PLAYER, NPC, ENEMY, DOOR_IN, DOOR_OUT, INVENTORY}
+    private enum ObjectType {PLAYER, NPC, ENEMY, DOOR_IN, DOOR_OUT, POTION}
     public enum Action {IDLE, MOV, ATK, DMG, INTERACT}
+
     private static ArrayList<GameObject> players = new ArrayList<>(2);
     private static ArrayList<GameObject> enemies = new ArrayList<>(30);
-    private static ArrayList<GameObject> interactables = new ArrayList<>(30);
+    //    private static ArrayList<GameObject> interactables = new ArrayList<>(30);
     private static ArrayList<GameObject> npcs = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
     private static int window_width, window_length;
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
@@ -24,6 +22,7 @@ public class GameObject extends JComponent {
     //public String cur_tile;
     private static double move_spd;
     private double ms; //movement speed for this object
+    private boolean speed;
     public double xPos;
     public double yPos;
     private double originX; //the origin stuff and dedicated speed is under testing!
@@ -34,8 +33,8 @@ public class GameObject extends JComponent {
     private int hitboxR;
     private int hitboxU;
     private int hitboxD;
-    private double levelWidth = Setup.colMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
-    private double levelHeight = Setup.rowMax[Setup.curMap] * 100;//the 100 is scale of tiles, temp
+    private double levelWidth = Setup.colMax[GameFrame.curMap] * 100;//the 100 is scale of tiles, temp
+    private double levelHeight = Setup.rowMax[GameFrame.curMap] * 100;//the 100 is scale of tiles, temp
     public int scrX = window_width/2 - xScale/2;
     public int scrY = window_length/2 - yScale/2;
     public double max_hp; //max health points
@@ -48,10 +47,14 @@ public class GameObject extends JComponent {
     private long cd; //fixed value for this character's ability cd time
     private String ability_name; //we might not need this (update. we need this to read animation)
     private int ability_range; //range for ability
-    private int character_type; //0 = player, 1 = enemy, 2 = npc, 3 = static object, 4 = attack
+    public int object_type; //0 = player, 1 = enemy, 2 = npc, 3 = static object, 4 = attack
     private String object_id; //for reading sprite images
+    private int mapLevel;
     private int npcType;
-    private boolean collected;
+    private boolean interactable;
+    public boolean collected;
+    public Inventory inventory;
+    public boolean canUseItem = true;
     public PathfindAI pathfind = new PathfindAI();
     public boolean pathfinding = false;
     private int counter = 0;
@@ -70,9 +73,9 @@ public class GameObject extends JComponent {
      * @author Christina, adjustments by Luka
      */
     public GameObject(String[] temp) {
-        character_type = Integer.parseInt(temp[0]);
+        object_type = Integer.parseInt(temp[0]);
 
-        switch (character_type) {
+        switch (object_type) {
             case 0, 1 -> {
                 max_hp = Double.parseDouble(temp[1]);
                 cur_hp = Double.parseDouble(temp[2]);
@@ -89,10 +92,12 @@ public class GameObject extends JComponent {
                 yPos = Double.parseDouble(temp[13]);
                 xScale = Integer.parseInt(temp[14]);
                 yScale = Integer.parseInt(temp[15]);
+                interactable = Boolean.parseBoolean(temp[16]);
+                mapLevel = Integer.parseInt(temp[17]);
                 hitbox = new Rectangle((int) xPos, (int) yPos, xScale, yScale);
-                if (Boolean.parseBoolean(temp[16])) {
-                    interactables.add(this);
-                }
+//                if (Boolean.parseBoolean(temp[16])) {
+//                    interactables.add(this);
+//                }
             }
             case 2 -> {
                 object_id = temp[1];
@@ -105,9 +110,10 @@ public class GameObject extends JComponent {
                 if(npcType == 3){
                     pathfinding = true;
                 }
-                if (Boolean.parseBoolean(temp[7])) {
-                    interactables.add(this);
-                }
+                interactable = Boolean.parseBoolean(temp[7]);
+//                if (Boolean.parseBoolean(temp[7])) {
+//                    interactables.add(this);
+//                }
             }
             case 3 -> {
                 object_id = temp[1];
@@ -115,15 +121,16 @@ public class GameObject extends JComponent {
                 yPos = Double.parseDouble(temp[3]);
                 xScale = Integer.parseInt(temp[4]);
                 yScale = Integer.parseInt(temp[5]);
-                if (Boolean.parseBoolean(temp[6])) {
-                    interactables.add(this);
-                }
+                interactable = Boolean.parseBoolean(temp[6]);
+//                if (Boolean.parseBoolean(temp[6])) {
+//                    interactables.add(this);
+//                }
                 collected = Boolean.parseBoolean(temp[7]);
             }
         }
 
         //add this game character to corresponding arraylist
-        switch(character_type) {
+        switch(object_type) {
             case 0:
                 type = ObjectType.PLAYER;
                 hitboxL = 10; //temp, the hitbox stuff is all currently under testing
@@ -131,6 +138,17 @@ public class GameObject extends JComponent {
                 hitboxU = yScale - 50;
                 hitboxD = yScale;
                 ms = move_spd;
+                GameFrame.curMap = mapLevel;
+                inventory = new Inventory();
+                if (Main.input.startOld){
+                    String[] inv = RWFile.readData("inventory");
+                    if (inv != null) {
+                        for (int i = 0; i < inv.length; i++){
+                            inventory.inventorySpace.add(new GameObject(RWFile.readData(inv[i])));
+                        }
+                    }
+
+                }
                 players.add(this);
                 break;
             case 1:
@@ -187,7 +205,7 @@ public class GameObject extends JComponent {
         this.xPos = xPos;
         this.yPos = yPos - 20;
         ms = move_spd * 2;
-        character_type = 4;
+        object_type = 4;
         max_hp = 1; //single hit
         cur_hp = 1;
         xScale = 50;
@@ -220,12 +238,13 @@ public class GameObject extends JComponent {
      * The method that gets called for each timer tick, checks for and refreshes object status
      * @author Christina, Luka
      */
-    public void doTick() throws FileNotFoundException {
-        switch(character_type) {
+    public void doTick(){
+        switch(object_type) {
             case 0:
                 refreshCD();
                 refreshXP();
                 //useAbility();
+                if (speed) spdBoost();
                 die();
                 break;
             case 1:
@@ -255,6 +274,8 @@ public class GameObject extends JComponent {
                 moveForward();
                 do_damage();
                 kill();
+//                System.out.println(xPos);
+//                System.out.println(yPos);
                 break;
 
         }
@@ -288,12 +309,13 @@ public class GameObject extends JComponent {
      * @author Christina
      */
     private void kill() {
-        if(getDistance(this, players.get(0)) > scrX * 2 ||! collisionCheck()){
+        if(getDistance(this, players.get(0)) > scrX * 2){
             cur_hp -= max_hp;
             die();
-        } if (character_type == 4 && (xPos + xScale + move_spd >= levelWidth || xPos - move_spd <= 20 || yPos + yScale + move_spd >= levelHeight || yPos - move_spd <= 0 || getDistance(this, players.get(0)) > scrX)){
+        } if (object_type == 4 &&  !collisionCheck() || (xPos + xScale + ms >= levelWidth || xPos - ms <= 0 || yPos + yScale + ms >= levelHeight || yPos - ms <= 0)){
             cur_hp -= max_hp;
             die();
+            Main.bgm.playSFX(1);
         }
     }
 
@@ -482,7 +504,7 @@ public class GameObject extends JComponent {
         switch(damage_type){
             case 1:
                 for(GameObject enemy : enemies){
-                    if(touches(enemy)){
+                    if(getDistance(this, enemy) < 10){
                         enemy.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -490,7 +512,7 @@ public class GameObject extends JComponent {
                 break;
             case -1:
                 for(GameObject player : players){
-                    if(touches(player)){
+                    if(getDistance(this, player) < 10){
                         player.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -552,7 +574,7 @@ public class GameObject extends JComponent {
         cur_direction = Direction.UP;
         cur_action = Action.MOV;
         if(yPos - ms > 0 && collisionCheck()){
-            switch(character_type) {
+            switch(object_type) {
                 case 0, 1, 2:
                     hitbox.setLocation((int) xPos, (int) (yPos - ms));
                     if (!characterCollision()) {
@@ -566,8 +588,11 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) xPos, (int) yPos);
                     break;
             }
+        } else if (object_type == 0) {
+            Main.bgm.playSFX(2);
         }
     }
+
     /**
      * Checks for current y position, if within boarders from the bottom and is not moving into an object with collision, moves up.
      * @author Christina
@@ -576,7 +601,7 @@ public class GameObject extends JComponent {
         cur_direction = Direction.DOWN;
         cur_action = Action.MOV;
         if(yPos + yScale + ms < levelHeight && collisionCheck()){
-            switch(character_type) {
+            switch(object_type) {
                 case 0, 1, 2:
                     hitbox.setLocation((int) xPos, (int) (yPos + ms));
                     if (!characterCollision()) {
@@ -590,6 +615,8 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) xPos, (int) yPos);
                     break;
             }
+        } else if (object_type == 0){
+            Main.bgm.playSFX(2);
         }
     }
 
@@ -601,7 +628,7 @@ public class GameObject extends JComponent {
         cur_direction = Direction.LEFT;
         cur_action = Action.MOV;
         if(xPos - ms > 10 && collisionCheck()){
-            switch(character_type) {
+            switch(object_type) {
                 case 0, 1, 2:
                     hitbox.setLocation((int) (xPos - ms), (int) (yPos));
                     if (!characterCollision()) {
@@ -615,6 +642,8 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) xPos, (int) yPos);
                     break;
             }
+        } else if (object_type == 0){
+            Main.bgm.playSFX(2);
         }
     }
     /**
@@ -625,10 +654,10 @@ public class GameObject extends JComponent {
         cur_direction = Direction.RIGHT;
         cur_action = Action.MOV;
         if(xPos + xScale + ms < levelWidth && collisionCheck()){
-            switch(character_type) {
+            switch(object_type) {
                 case 0, 1, 2:
                     hitbox.setLocation((int) (xPos + ms), (int) yPos);
-                    if (!characterCollision()) {
+                     if (!characterCollision()) {
                         xPos += ms;
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
@@ -639,6 +668,8 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) xPos, (int) yPos);
                     break;
             }
+        } else if (object_type == 0){
+            Main.bgm.playSFX(2);
         }
     }
 
@@ -670,6 +701,7 @@ public class GameObject extends JComponent {
                     last_atkcd = System.currentTimeMillis();
                     break;
             }
+            Main.bgm.playSFX(0);
         }
         last_atkcd = cur_atkcd;
         System.out.println(cur_atkcd);
@@ -681,7 +713,7 @@ public class GameObject extends JComponent {
      * attacks are in the direction that the enemies are facing
      * @author Christina
      */
-    private void attack() throws FileNotFoundException {
+    private void attack() {
         cur_atkcd = System.currentTimeMillis() - last_atkcd;
         if (cur_atkcd / 1000 > atk_spd && withinAttackRange()) {
             switch (atk_type) {
@@ -706,7 +738,12 @@ public class GameObject extends JComponent {
                     }
                     break;
                 case 0:
-                    Scanner s = new Scanner(new File("data/objectData/enemyTest.csv"));
+                    Scanner s = null;
+                    try {
+                        s = new Scanner(new File("data/objectData/enemyTest.csv"));
+                    } catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                     String[] data = s.nextLine().split(",");
                     s.close();
                     GameFrame.addObject(data, 0);
@@ -714,8 +751,8 @@ public class GameObject extends JComponent {
                     break;
 
             }
+            Main.bgm.playSFX(0);
         }
-
     }
 
     /**
@@ -778,15 +815,22 @@ public class GameObject extends JComponent {
      * @author Graham, edited by Luka
      */
     public void interact() {
-        for (GameObject intractable : interactables) {
-            System.out.println(getDistance(intractable, this));
-            if (cur_direction == Direction.UP) {
-                if (getDistance(intractable, this) <= 100) {
-                    intractable.doInteract();
+        if (GameFrame.curMap == 0) {
+            for (GameObject obj : GameFrame.game_objects) {
+                if (obj.interactable) {
+                    if (getDistance(obj, this) <= 75) {
+                        obj.doInteract();
+                        break;
+                    }
                 }
-            } if (cur_direction == Direction.DOWN){
-                if (getDistance(intractable, this) >= 100) {
-                    intractable.doInteract();
+            }
+        } if (GameFrame.curMap == 1){
+            for (GameObject obj : GameFrame.sub_game_objects) {
+                if (obj.interactable) {
+                    if (getDistance(obj, this) <= 75) {
+                        obj.doInteract();
+                        break;
+                    }
                 }
             }
         }
@@ -794,17 +838,30 @@ public class GameObject extends JComponent {
 
     /**
      *completing object specific interactions depending on object type
-     * @author Graham
+     * @author Graham, edited by Luka
      */
     private void doInteract() {
-        switch (type) {
-            case DOOR_IN:
-                Setup.curMap = 1;
+        switch (object_id) {
+            case "door_in":
+                GameFrame.curMap = 1;
+                Main.bgm.playSFX(4);
                 Main.bgm.changeTrack(2);
                 break;
-            case DOOR_OUT:
-                if(Setup.curMap >= 1) Setup.curMap --;
+            case "door_out":
+                if(GameFrame.curMap >= 1) GameFrame.curMap --;
+                Main.bgm.playSFX(4);
                 Main.bgm.changeTrack(1);
+                break;
+            case "potion":
+                if (!collected) {
+                    players.getFirst().inventory.inventorySpace.add(this);
+                    collected = true;
+                }
+                break;
+            case "spdBoost":
+                Main.bgm.playSFX(6);
+                players.getFirst().speed = true;
+                collected = true;
                 break;
             default:
                 System.out.println("poo poo"); //????? LMAO
@@ -860,6 +917,36 @@ public class GameObject extends JComponent {
 
 
 
+    public void useItem(){
+        if (inventory.getCurItemIDX() < inventory.inventorySpace.size()) {
+            GameObject obj = inventory.getCurObj();
+            if (canUseItem) {
+                switch (obj.object_id) {
+                    case "potion" -> {
+                        Main.bgm.playSFX(5);
+                        cur_hp += 20;
+                        canUseItem = false;
+                        inventory.inventorySpace.remove(obj);
+                    }
+                    case "asdf" -> {
+                        System.out.println("yeeee");
+                    }
+                }
+            }
+        }
+    }
+
+    private void spdBoost(){
+        if (counter == 0) ms *= 2;
+        counter++;
+        System.out.println("spd!");
+        if (counter == 500){
+            ms /= 2;
+            speed = false;
+            counter = 0;
+            System.out.println("slow");
+        }
+    }
 
     /**
      * Find the tile the player is currently on, as of now only used for testing and debugging
@@ -882,7 +969,7 @@ public class GameObject extends JComponent {
             y = (int) yPos / 100;
         }
 //        System.out.println("[" + x + "," + y + "]");
-        return Setup.textureData[Setup.curMap][y][x];
+        return Setup.textureData[GameFrame.curMap][y][x];
         //should create a tile collision checker so we dont have to manually input which tiles are solid
     }
 
@@ -897,20 +984,20 @@ public class GameObject extends JComponent {
         switch (cur_direction){
             case UP -> {
                 toTouch = (int) (yPos + hitboxU - move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
-                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
+                return !Setup.collisionData[GameFrame.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
+                        !Setup.collisionData[GameFrame.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
             } case LEFT -> {
                 toTouch = (int) (xPos + hitboxL - move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
-                        !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
+                return !Setup.collisionData[GameFrame.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
+                        !Setup.collisionData[GameFrame.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
             } case DOWN -> {
                 toTouch = (int) (yPos + hitboxD + move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
-                        !Setup.collisionData[Setup.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
+                return !Setup.collisionData[GameFrame.curMap][toTouch][(int) (xPos + hitboxL) / 100] &&
+                        !Setup.collisionData[GameFrame.curMap][toTouch][(int) (xPos + (hitboxR - hitboxL)) / 100];
             } case RIGHT -> {
                 toTouch = (int) (xPos + hitboxR + move_spd) / 100;
-                return !Setup.collisionData[Setup.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
-                        !Setup.collisionData[Setup.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
+                return !Setup.collisionData[GameFrame.curMap][(int) (yPos + hitboxU) / 100][toTouch] &&
+                        !Setup.collisionData[GameFrame.curMap][(int) (yPos + (hitboxD - hitboxU)) / 100][toTouch];
             }
         }
         return false;
@@ -925,7 +1012,7 @@ public class GameObject extends JComponent {
      * @author Luka
      */
     public void draw(Graphics2D gr, int drawX, int drawY){ //to be draw camera
-        switch(character_type) {
+        switch(object_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
             case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
             case 3: gr.drawImage(LoadedSprites.pullTexture(object_id), drawX, drawY, xScale, yScale, null); break;
@@ -990,9 +1077,38 @@ public class GameObject extends JComponent {
      * @author Graham or Luka idk
      */
     public String[] saveData() {
-        return new String[]{Integer.toString(character_type), Double.toString(max_hp), Double.toString(cur_hp), Double.toString(atk_dmg), Double.toString(atk_spd), Integer.toString(atk_type), Double.toString(ap), Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), object_id};
+        switch (object_type){
+            case 0 -> {
+                RWFile.writeInventory(this.inventory);
+                saveInventory();
+                return new String[]{Integer.toString(object_type), Double.toString(max_hp), Double.toString(cur_hp),
+                        Integer.toString(atk_dmg), Integer.toString(atk_spd), Integer.toString(atk_type), Double.toString(ap),
+                        Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), object_id,
+                        Double.toString(xPos), Double.toString(yPos), Integer.toString(xScale), Integer.toString(yScale), Boolean.toString(interactable), Integer.toString(GameFrame.curMap)};
+            }
+            case 1 -> {
+                return new String[]{Integer.toString(object_type), Double.toString(max_hp), Double.toString(cur_hp),
+                        Integer.toString(atk_dmg), Integer.toString(atk_spd), Integer.toString(atk_type), Double.toString(ap),
+                        Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), object_id,
+                        Double.toString(xPos), Double.toString(yPos), Integer.toString(xScale), Integer.toString(yScale), Boolean.toString(interactable), Integer.toString(GameFrame.curMap)};
+            }
+            case 2 -> {
+                return new String[]{Integer.toString(object_type), object_id, Double.toString(xPos), Double.toString(yPos),
+                        Integer.toString(xScale), Integer.toString(yScale), Integer.toString(npcType), Boolean.toString(interactable)};
+            }
+            case 3 -> {
+                return new String[]{Integer.toString(object_type), object_id, Double.toString(xPos), Double.toString(yPos),
+                        Integer.toString(xScale), Integer.toString(yScale), Boolean.toString(interactable), Boolean.toString(collected)};
+            }
+        }
+        return null;
     }
 
+    private void saveInventory(){
+        for (GameObject obj : inventory.inventorySpace){
+            RWFile.writeData(obj);
+        }
+    }
 
     /**
      * @return the object ID of this object
@@ -1018,13 +1134,12 @@ public class GameObject extends JComponent {
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
-
     /**
      * @return the status of the current object, if it is dead or not, and adds to player's xp bar if an enemy is defeated
      * @author Christina
      */
     public boolean died() {
-        if(is_dead && character_type == 1){
+        if(is_dead && object_type == 1){
             players.get(0).cur_xp += 50;
         }
         if(is_dead){

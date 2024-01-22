@@ -16,16 +16,16 @@ public class PathfindAI {
     }
 
     public void nodeSetup(){
-        nodes = new Node[Setup.rowMax[Setup.curMap]][Setup.colMax[Setup.curMap]];
+        nodes = new Node[Setup.rowMax[GameFrame.curMap]][Setup.colMax[GameFrame.curMap]];
 
         int row = 0;
         int col = 0;
 
-        while (col < Setup.colMax[Setup.curMap] && row < Setup.rowMax[Setup.curMap]){
+        while (col < Setup.colMax[GameFrame.curMap] && row < Setup.rowMax[GameFrame.curMap]){
             nodes[row][col] = new Node(row, col);
             col++;
 
-            if (col == Setup.colMax[Setup.curMap]){
+            if (col == Setup.colMax[GameFrame.curMap]){
                 col = 0;
                 row++;
             }
@@ -45,19 +45,19 @@ public class PathfindAI {
         int row = 0;
         int col = 0;
 
-        while (col < Setup.colMax[Setup.curMap] && row < Setup.rowMax[Setup.curMap]){
-            if (Setup.collisionData[Setup.curMap][row][col]){
+        while (col < Setup.colMax[GameFrame.curMap] && row < Setup.rowMax[GameFrame.curMap]){
+            if (Setup.collisionData[GameFrame.curMap][row][col]){
                 nodes[row][col].solid = true;
             }
             findCost(nodes[row][col]);
 
             col++;
-            if(col == Setup.colMax[Setup.curMap]){
+            if(col == Setup.colMax[GameFrame.curMap]){
                 col = 0;
                 row++;
             }
         }
-        System.out.println("set");
+//        System.out.println("set");
     }
 
     public void findCost(Node n){
@@ -84,9 +84,9 @@ public class PathfindAI {
                 openNode(nodes[row - 1][col]);
             } if (col - 1 >= 0){
                 openNode(nodes[row][col - 1]);
-            } if (row + 1 < Setup.rowMax[Setup.curMap]){
+            } if (row + 1 < Setup.rowMax[GameFrame.curMap]){
                 openNode(nodes[row + 1][col]);
-            } if (col + 1 < Setup.colMax[Setup.curMap]){
+            } if (col + 1 < Setup.colMax[GameFrame.curMap]){
                 openNode(nodes[row][col + 1]);
             }
 
@@ -115,7 +115,7 @@ public class PathfindAI {
             }
             step++;
         }
-        System.out.println("searching");
+//        System.out.println("searching");
         return goalReached;
     }
 
@@ -131,13 +131,13 @@ public class PathfindAI {
         int row = 0;
         int col = 0;
 
-        while (col < Setup.colMax[Setup.curMap] && row < Setup.rowMax[Setup.curMap]){
+        while (col < Setup.colMax[GameFrame.curMap] && row < Setup.rowMax[GameFrame.curMap]){
             nodes[row][col].open = false;
             nodes[row][col].checked = false;
             nodes[row][col].solid = false;
             col++;
 
-            if (col == Setup.colMax[Setup.curMap]){
+            if (col == Setup.colMax[GameFrame.curMap]){
                 col = 0;
                 row++;
             }

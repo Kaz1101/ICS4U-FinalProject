@@ -2,37 +2,37 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class GameFrame extends JPanel{
     GameObject p1;
-    private static ArrayList<GameObject> game_objects = new ArrayList<>();
-    private static ArrayList<GameObject> sub_game_objects = new ArrayList<>();
+    public static int curMap;
+
+    public static ArrayList<GameObject> game_objects = new ArrayList<>();
+    public static ArrayList<GameObject> sub_game_objects = new ArrayList<>();
     private boolean game_over = false;
     private JLabel pauseScreen = new JLabel(new ImageIcon(LoadedSprites.pullTexture("tempPause")));
     private int pauseDisplay = 0;
+    private int inventoryDisplay = 0;
 
     /**
      * Refreshes window to now initialize and display the game with any necessary objects
      * @throws IOException
-     * @author Luka
      */
     public GameFrame() throws IOException {
         Main.window.getContentPane().removeAll();
         Main.window.add(this);
-        Setup.curMap = 0;
+        curMap = 0;
         this.setBackground(Color.black);
-        p1 = new GameObject(RWFile.readInitialFile("booperdooper"));
-        game_objects.add(p1);
-        sub_game_objects.add(p1);
+        if (Main.input.startNew) p1 = new GameObject(RWFile.readInitialFile("booperdooper"));
+        else p1 = new GameObject(RWFile.readData("booperdooper"));
         loadLooseObj();
         this.revalidate();
         this.repaint();
         this.setVisible(true);
 
-        Main.bgm.changeTrack(1);
+        Main.bgm.changeTrack(curMap + 1);
 
         System.out.println("game start");
         tick.start();
@@ -40,9 +40,9 @@ public class GameFrame extends JPanel{
 
 
     /**
+     * Written by Luka, with things added by Graham and Christina
      * Timer that calls corresponding methods for all player inputs and calls doTick() for every object
      * Runs through every 10 milliseconds and performs appropriate actions
-     * @author Luka, Graham, minor adjustments by Christina
      */
     Timer tick = new Timer(10, new ActionListener() {
         @Override
@@ -54,6 +54,10 @@ public class GameFrame extends JPanel{
                         Main.bgm.play();
                         Main.bgm.loop();
                         pauseDisplay--;
+                    } if (inventoryDisplay == 1){
+                        Main.bgm.play();
+                        Main.bgm.loop();
+                        inventoryDisplay--;
                     }
                     if (!(Main.input.up && Main.input.left && Main.input.down && Main.input.right)) {
                         p1.cur_action = GameObject.Action.IDLE;
@@ -86,24 +90,55 @@ public class GameFrame extends JPanel{
                         p1.cur_action = GameObject.Action.INTERACT;
                         p1.interact();
                     }
-                    if (Setup.curMap == 0) {
-                        try {
-                            ticks(game_objects);
-                        } catch (FileNotFoundException ex) {
-                            throw new RuntimeException(ex);
+                    if (curMap == 0) {
+                        for (int i = 0; i < game_objects.size(); i++) {
+                            GameObject obj = game_objects.get(i);
+                            obj.cur_action = GameObject.Action.IDLE;
+                            obj.doTick();
+                            if (obj.died() || obj.collected) {
+                                game_objects.remove(obj);
+                                i--;
+                            }
                         }
                     }
-                    if (Setup.curMap == 1) {
-                        try {
-                            ticks(sub_game_objects);
-                        } catch (FileNotFoundException ex) {
-                            throw new RuntimeException(ex);
+                    if (curMap == 1) {
+                        for (int i = 0; i < sub_game_objects.size(); i++) {
+                            GameObject obj = sub_game_objects.get(i);
+                            obj.doTick();
+                            if (obj.died()) {
+                                sub_game_objects.remove(obj);
+                                i--;
+                            }
                         }
                     }
-
-
                     if (p1.died()) {
                         game_over = true;
+                    }
+                    p1.doTick();
+                    repaint();
+                }
+                case PAUSED -> {
+                    if (pauseDisplay == 0) {
+                        Main.bgm.stop();
+                        pauseDisplay++;
+                        repaint();
+                    }
+                    if (Main.input.saving){
+                        game_objects.removeIf(obj -> obj.object_type == 4);
+                        sub_game_objects.removeIf(obj -> obj.object_type == 4);
+                        save();
+                    }
+                }
+                case INVENTORY -> {
+                    if (inventoryDisplay == 0){
+                        Main.bgm.stop();
+                        inventoryDisplay++;
+                    }
+                    if (Main.input.useItem){
+                        p1.useItem();
+                    }
+                    if (!Main.input.useItem){
+                        p1.canUseItem = true;
                     }
                     repaint();
                 }
@@ -111,28 +146,13 @@ public class GameFrame extends JPanel{
         }
     });
 
-    /**
-     * Loops through corresponding list to call doTick for each object
-     * @param list the list of objects in the current map
-     */
-    private void ticks(ArrayList<GameObject> list) throws FileNotFoundException {
-        for (int i = 0; i < list.size(); i++) {
-            GameObject obj = list.get(i);
-            obj.doTick();
-            if (obj.died()) {
-                list.remove(obj);
-                i--;
-            }
-        }
-    }
-
 
     /**
+     * Written by Luka
      * The thing that controlls graphics and draws everything on screen
      * Houses the map painting functions and calculations (only paints within a certain distance around players for efficient painting)
      * Sends Graphics component to respective GameObject methods that require them to draw objects and player
      * @param g the <code>Graphics</code> object to protect
-     * @author Luka
      */
     @Override
     public void paintComponent(Graphics g){
@@ -143,10 +163,10 @@ public class GameFrame extends JPanel{
         int col = 0;
         int row = 0;
 
-        while (col < Setup.colMax[Setup.curMap] && row < Setup.rowMax[Setup.curMap]) {
+        while (col < Setup.colMax[curMap] && row < Setup.rowMax[curMap]) {
             int tileX = col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
             int tileY = row * 100;
-            String tileType = Setup.textureData[Setup.curMap][row][col];
+            String tileType = Setup.textureData[curMap][row][col];
             double paintX = tileX - p1.xPos + p1.scrX;
             double paintY = tileY - p1.yPos + p1.scrY;
 
@@ -156,35 +176,35 @@ public class GameFrame extends JPanel{
             }
             col++;
 
-            if (col == Setup.colMax[Setup.curMap]) {
+            if (col == Setup.colMax[curMap]) {
                 col = 0;
                 row++;
             }
         } //end of map tile painting
 
-//        ArrayList<Integer> testX = new ArrayList<Integer>();
-//        ArrayList<Integer> testY = new ArrayList<Integer>();
-//        //temp debug
-//        gr.setColor(new Color(255,0,0,70));
-//        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
-//            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
-//            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
-//            double paintX = tileX - p1.xPos + p1.scrX;
-//            double paintY = tileY - p1.yPos + p1.scrY;
-//
-//            if (tileX - 200 < p1.xPos + p1.scrX && tileX + 200 > p1.xPos - p1.scrX
-//                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
-//                gr.fillRect((int)paintX, (int)paintY, 100, 100);
-//                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
-//                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
-//            }
-//        }
+        ArrayList<Integer> testX = new ArrayList<Integer>();
+        ArrayList<Integer> testY = new ArrayList<Integer>();
+        //temp debug
+        gr.setColor(new Color(255,0,0,70));
+        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
+            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
+            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
+            double paintX = tileX - p1.xPos + p1.scrX;
+            double paintY = tileY - p1.yPos + p1.scrY;
 
-        if (Setup.curMap == 0) {
+            if (tileX - 200 < p1.xPos + p1.scrX && tileX + 200 > p1.xPos - p1.scrX
+                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
+                gr.fillRect((int)paintX, (int)paintY, 100, 100);
+                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
+                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
+            }
+        }
+
+        if (curMap == 0) {
             for (GameObject o : game_objects) {
                 o.renderCheck(gr);
             }
-        } if (Setup.curMap == 1) {
+        } if (curMap == 1) {
             for (GameObject o : sub_game_objects) {
                 o.renderCheck(gr);
             }
@@ -200,6 +220,9 @@ public class GameFrame extends JPanel{
             gr.fillRect(0, 0, Main.x, Main.y);
             gr.drawImage(LoadedSprites.pullTexture("tempPause"), (Main.x / 3), (Main.y / 3), 650, 400, null);
         }
+        if (inventoryDisplay == 1){
+            p1.inventory.draw(gr);
+        }
         gr.dispose();
 
     }
@@ -208,7 +231,6 @@ public class GameFrame extends JPanel{
      * Creates and adds a GameObject to the GameObject arraylist
      * @param s a string array that contains information of the object that is created
      * @param map the specific map that this object should be added to
-     * @author Christina, adjusted by Luka
      */
     public static void addObject(String[] s, int map) {
         switch (map) {
@@ -223,10 +245,9 @@ public class GameFrame extends JPanel{
      * @param damage_type which character type this attack is useful against
      * @param atk_type ranged or melee attack
      * @param character_id which character's attack animation to pull
-     * @author Christina, adjusted by Luka
      */
     public static void addObject(int atk_dmg, int damage_type, int atk_type, String character_id, double x, double y, String d){
-        switch (Setup.curMap) {
+        switch (curMap) {
             case 0: game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id, x, y, d)); break;
             case 1: sub_game_objects.add(new GameObject(atk_dmg, damage_type, atk_type, character_id, x, y, d)); break;
         }
@@ -234,15 +255,33 @@ public class GameFrame extends JPanel{
 
 
     /**
+     * Written by Luka
      * Takes objects to be initialized from a csv, then initializes them and adds them to the GameObject arrays
      * @throws IOException
-     * @author Luka
      */
     private void loadLooseObj() throws IOException {
-        String[] loose = RWFile.readGeneral("data/objectData/objectList");
+        String[] loose;
+        if (Main.input.startNew) loose = RWFile.readGeneral("data/objectData/objectList");
+        else loose = RWFile.readGeneral("data/saveData/objectList");
         for (int i = 0; i < loose.length - 1; i += 2){
-            addObject(RWFile.readInitialFile(loose[i]), Integer.parseInt(loose[i+1]));
+            if (Main.input.startNew) addObject(RWFile.readInitialFile(loose[i]), Integer.parseInt(loose[i+1]));
+            else{
+                if (RWFile.readData(loose[i]) != null) addObject(RWFile.readData(loose[i]), Integer.parseInt(loose[i+1]));
+            }
         }
+    }
+
+    public void save(){
+        RWFile.writeData(p1);
+        for (GameObject obj : game_objects){
+            RWFile.writeData(obj);
+        }
+        for (GameObject obj : sub_game_objects){
+            RWFile.writeData(obj);
+        }
+        RWFile.updateList();
+        tick.stop();
+        System.exit(0);
     }
 }
 

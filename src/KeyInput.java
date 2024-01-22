@@ -3,7 +3,7 @@ import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
 
-    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, start, options, paused;
+    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, startNew, startOld, options, inventory, useItem, paused, saving;
 
     /**
      * Written by Luka (things were added by both Christina and Graham)
@@ -20,7 +20,12 @@ public class KeyInput implements KeyListener {
                     }
                     case KeyEvent.VK_ENTER ->{
                         if (!options){
-                            start = true;
+                            startNew = true;
+                        }
+                    }
+                    case KeyEvent.VK_SPACE ->{
+                        if (!options){
+                            startOld = true;
                         }
                     }
                     case KeyEvent.VK_END -> System.exit(0);
@@ -72,6 +77,11 @@ public class KeyInput implements KeyListener {
                     case KeyEvent.VK_ESCAPE:
                         paused = true;
                         Main.gameState = Main.GameState.PAUSED;
+                        break;
+                    case KeyEvent.VK_Q:
+                        inventory = true;
+                        Main.gameState = Main.GameState.INVENTORY;
+                        break;
                 }
             }
             case PAUSED -> {
@@ -80,7 +90,38 @@ public class KeyInput implements KeyListener {
                         paused = false;
                         Main.gameState = Main.GameState.PLAY;
                     }
-                    case KeyEvent.VK_ENTER -> System.exit(0);
+                    case KeyEvent.VK_ENTER -> saving = true;
+                }
+            }
+            case INVENTORY -> {
+                switch (e.getKeyCode()){
+                    case KeyEvent.VK_Q -> {
+                        inventory = false;
+                        Main.gameState = Main.gameState.PLAY;
+                    }
+                    case KeyEvent.VK_UP -> {
+                        if (Inventory.slotRow > 0){
+                            Inventory.slotRow--;
+                        }
+                    }
+                    case KeyEvent.VK_LEFT -> {
+                        if (Inventory.slotCol > 0){
+                            Inventory.slotCol--;
+                        }
+                    }
+                    case KeyEvent.VK_DOWN -> {
+                        if (Inventory.slotRow < 3){
+                            Inventory.slotRow++;
+                        }
+                    }
+                    case KeyEvent.VK_RIGHT -> {
+                        if (Inventory.slotCol < 9){
+                            Inventory.slotCol++;
+                        }
+                    }
+                    case KeyEvent.VK_ENTER -> {
+                        useItem = true;
+                    }
                 }
             }
         }
@@ -127,6 +168,12 @@ public class KeyInput implements KeyListener {
                     System.out.println("interact");
                     interact = false;
                     break;
+            }
+        }
+        if (Main.gameState == Main.GameState.INVENTORY){
+
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                useItem = false;
             }
         }
     }

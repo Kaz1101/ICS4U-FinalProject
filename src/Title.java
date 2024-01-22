@@ -28,7 +28,7 @@ public class Title {
         titleDisplay(0);
         Main.window.addKeyListener(Main.input);
         try {
-            Main.bgm.set(0);
+            Main.bgm.setMusic(0);
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
             throw new RuntimeException(e);
         }
@@ -54,7 +54,7 @@ public class Title {
                 titleDisplay(0);
             }
             //^ should we do joptionpane? or we can draw jbuttons
-            if (Main.input.start){
+            if (Main.input.startNew || Main.input.startOld){
                 try {
                     Main.bgm.stop();
                     new GameFrame();
