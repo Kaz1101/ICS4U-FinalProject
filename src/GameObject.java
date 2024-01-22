@@ -307,10 +307,10 @@ public class GameObject extends JComponent {
      * @author Christina
      */
     private void kill() {
-        if(getDistance(this, players.get(0)) > scrX * 2 ||! collisionCheck()){
+        if(getDistance(this, players.get(0)) > scrX * 1.5||! collisionCheck()){
             cur_hp -= max_hp;
             die();
-        } if (object_type == 4 &&  !collisionCheck() || (xPos + xScale + ms >= levelWidth || xPos - ms <= 0 || yPos + yScale + ms >= levelHeight || yPos - ms <= 0)){
+        } if (object_type == 4 &&  !collisionCheck() || (xPos + xScale + ms >= levelWidth || xPos - ms <= 20 || yPos + yScale + ms >= levelHeight || yPos - ms <= 0)){
             cur_hp -= max_hp;
             die();
             Main.bgm.playSFX(1);
@@ -739,7 +739,7 @@ public class GameObject extends JComponent {
                     Scanner s = null;
                     try {
                         int idk = (int) (r.nextDouble() * 2) + 1;
-                        s = new Scanner(new File("data/objectData/enemyTest" + idk + ".csv"));
+                        s = new Scanner(new File("data/objectData/enemy" + idk + ".csv"));
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
