@@ -102,6 +102,7 @@ public class GameObject extends JComponent {
                 xScale = Integer.parseInt(temp[4]);
                 yScale = Integer.parseInt(temp[5]);
                 npcType = Integer.parseInt(temp[6]);
+                hitbox = new Rectangle((int) xPos, (int) yPos, xScale, yScale);
                 if(npcType == 3){
                     pathfinding = true;
                 }
@@ -346,14 +347,14 @@ public class GameObject extends JComponent {
     private void lrMove(double spd){
             if (cur_direction == Direction.LEFT) {
                 if (xPos >= originX - 400) {
-                    xPos -= spd;
+                    moveLeft();
                 } else {
                     cur_direction = Direction.RIGHT;
                 }
             }
             if (cur_direction == Direction.RIGHT) {
                 if (xPos <= originX) {
-                    xPos += spd;
+                    moveRight();
                 } else {
                     cur_direction = Direction.LEFT;
                 }
@@ -540,6 +541,11 @@ public class GameObject extends JComponent {
                 return true;
             }
         }
+        for(GameObject npc : npcs){
+            if(npc != this && touches(npc)){
+                return true;
+            }
+        }
         return false;
     }
 
@@ -554,7 +560,7 @@ public class GameObject extends JComponent {
         cur_action = Action.MOV;
         if(yPos - ms > 0 && collisionCheck()){
             switch(character_type) {
-                case 0, 1:
+                case 0, 1, 2:
                     hitbox.setLocation((int) xPos, (int) (yPos - ms));
                     if (!characterCollision()) {
                         yPos -= ms;
@@ -578,7 +584,7 @@ public class GameObject extends JComponent {
         cur_action = Action.MOV;
         if(yPos + yScale + ms < levelHeight && collisionCheck()){
             switch(character_type) {
-                case 0, 1:
+                case 0, 1, 2:
                     hitbox.setLocation((int) xPos, (int) (yPos + ms));
                     if (!characterCollision()) {
                         yPos += ms;
@@ -603,7 +609,7 @@ public class GameObject extends JComponent {
         cur_action = Action.MOV;
         if(xPos - ms > 10 && collisionCheck()){
             switch(character_type) {
-                case 0, 1:
+                case 0, 1, 2:
                     hitbox.setLocation((int) (xPos - ms), (int) (yPos));
                     if (!characterCollision()) {
                         xPos -= ms;
@@ -627,7 +633,7 @@ public class GameObject extends JComponent {
         cur_action = Action.MOV;
         if(xPos + xScale + ms < levelWidth && collisionCheck()){
             switch(character_type) {
-                case 0, 1:
+                case 0, 1, 2:
                     hitbox.setLocation((int) (xPos + ms), (int) yPos);
                     if (!characterCollision()) {
                         xPos += ms;
