@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class Setup extends LoadedSprites {
+    public static int curMap;
     public String textureDir;
     public static String[][][] textureData;
     public static boolean[][][] collisionData;

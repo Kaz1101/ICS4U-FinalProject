@@ -61,7 +61,7 @@ public class GameObject extends JComponent {
     private static Random r = new Random();
     private Rectangle hitbox = new Rectangle(0, 0, 0, 0);
     private double cur_xp = 0;
-    private double[] xps = {0, 100, 500, 1200, 2000, 2800, 3600, 4500}; //havent finalized xp amount and gain
+    private double[] xps = {0, 100, 500, 1200, 2000, 2800, 3600, 4500, 20000000}; //havent finalized xp amount and gain
     private double next_xp = xps[1];
     private int level = 1;
     private double dmg_boost = 1; //multiplier
@@ -274,8 +274,6 @@ public class GameObject extends JComponent {
                 moveForward();
                 do_damage();
                 kill();
-//                System.out.println(xPos);
-//                System.out.println(yPos);
                 break;
 
         }
@@ -309,7 +307,7 @@ public class GameObject extends JComponent {
      * @author Christina
      */
     private void kill() {
-        if(getDistance(this, players.get(0)) > scrX * 2){
+        if(getDistance(this, players.get(0)) > scrX * 2 ||! collisionCheck()){
             cur_hp -= max_hp;
             die();
         } if (object_type == 4 &&  !collisionCheck() || (xPos + xScale + ms >= levelWidth || xPos - ms <= 0 || yPos + yScale + ms >= levelHeight || yPos - ms <= 0)){
@@ -504,7 +502,7 @@ public class GameObject extends JComponent {
         switch(damage_type){
             case 1:
                 for(GameObject enemy : enemies){
-                    if(getDistance(this, enemy) < 10){
+                    if(touches(enemy)){
                         enemy.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -512,7 +510,7 @@ public class GameObject extends JComponent {
                 break;
             case -1:
                 for(GameObject player : players){
-                    if(getDistance(this, player) < 10){
+                    if(touches(player)){
                         player.takeDamage(atk_dmg);
                         kill(this);
                     }
@@ -657,7 +655,7 @@ public class GameObject extends JComponent {
             switch(object_type) {
                 case 0, 1, 2:
                     hitbox.setLocation((int) (xPos + ms), (int) yPos);
-                     if (!characterCollision()) {
+                    if (!characterCollision()) {
                         xPos += ms;
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
@@ -740,10 +738,12 @@ public class GameObject extends JComponent {
                 case 0:
                     Scanner s = null;
                     try {
-                        s = new Scanner(new File("data/objectData/enemyTest.csv"));
+                        int idk = (int) (r.nextDouble() * 2) + 1;
+                        s = new Scanner(new File("data/objectData/enemyTest" + idk + ".csv"));
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
+
                     String[] data = s.nextLine().split(",");
                     s.close();
                     GameFrame.addObject(data, 0);
@@ -854,13 +854,13 @@ public class GameObject extends JComponent {
                 break;
             case "potion":
                 if (!collected) {
-                    players.getFirst().inventory.inventorySpace.add(this);
+                    players.get(0).inventory.inventorySpace.add(this);
                     collected = true;
                 }
                 break;
             case "spdBoost":
                 Main.bgm.playSFX(6);
-                players.getFirst().speed = true;
+                players.get(0).speed = true;
                 collected = true;
                 break;
             default:
@@ -881,6 +881,7 @@ public class GameObject extends JComponent {
         } else {
             cur_hp = 0;
         }
+
     }
 
     /**
