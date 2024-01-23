@@ -82,9 +82,10 @@ public class Setup extends LoadedSprites {
     private void mapCollision(String[] collision){
         collisionData = new boolean[textureData.length][textureData[0].length][textureData[0][0].length];
         for (int a = 0; a < textureData.length; a++) {
-            for (int i = 0; i < textureData[0].length; i++) {
-                for (int j = 0; j < textureData[0][0].length; j++) {
+            for (int i = 0; i < textureData[a].length; i++) {
+                for (int j = 0; j < textureData[a][i].length; j++) {
                     for (int k = 0; k < collision.length; k++) {
+                        System.out.println(a + " " + i + " " + j + " " + k);
                         if (textureData[a][i][j].equals(collision[k])) {
                             collisionData[a][i][j] = true;
                             break;
