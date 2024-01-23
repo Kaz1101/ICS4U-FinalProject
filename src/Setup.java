@@ -81,9 +81,10 @@ public class Setup extends LoadedSprites {
     private void mapCollision(String[] collision){
         collisionData = new boolean[textureData.length][textureData[0].length][textureData[0][0].length];
         for (int a = 0; a < textureData.length; a++) {
-            for (int i = 0; i < textureData[0].length; i++) {
-                for (int j = 0; j < textureData[0][0].length; j++) {
+            for (int i = 0; i < textureData[a].length; i++) {
+                for (int j = 0; j < textureData[a][i].length; j++) {
                     for (int k = 0; k < collision.length; k++) {
+                        System.out.println(a + " " + i + " " + j + " " + k);
                         if (textureData[a][i][j].equals(collision[k])) {
                             collisionData[a][i][j] = true;
                             break;
@@ -160,7 +161,7 @@ public class Setup extends LoadedSprites {
             load("data/assets/badpotion.png", "potion", 100,100);
             load("data/assets/badpotion.png", "potion2", 100,100);
             load("data/assets/tree1.png", "spdBoost", 100,100);
-            load("data/assets/transparent.png", "spawner", 30, 30);
+            load("data/assets/transparent.png", "spawner_UP_IDLE", 30, 30);
 
             loadMapTextures();
         } catch (IOException e) {

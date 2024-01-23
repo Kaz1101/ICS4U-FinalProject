@@ -664,7 +664,6 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) (xPos - ms), (int) (yPos));
                     if (!characterCollision()) {
                         xPos -= ms;
-
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
                         if (object_type == 0){
@@ -694,7 +693,6 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) (xPos + ms), (int) yPos);
                     if (!characterCollision()) {
                         xPos += ms;
-
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
                         if (object_type == 0){
@@ -725,15 +723,19 @@ public class GameObject extends JComponent {
             switch (dir) {
                 case "U":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "u");
+                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "D":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "d");
+                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "L":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "l");
+                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "R":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "r");
+                    last_atkcd = System.currentTimeMillis();
                     break;
             }
             if(!speed_lock){
@@ -761,15 +763,19 @@ public class GameObject extends JComponent {
                     switch (cur_direction) {
                         case UP:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "u");
+                            last_atkcd = System.currentTimeMillis();
                             break;
                         case DOWN:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "d");
+                            last_atkcd = System.currentTimeMillis();
                             break;
                         case LEFT:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "l");
+                            last_atkcd = System.currentTimeMillis();
                             break;
                         case RIGHT:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "r");
+                            last_atkcd = System.currentTimeMillis();
                             break;
                     }
                     if(!speed_lock){
