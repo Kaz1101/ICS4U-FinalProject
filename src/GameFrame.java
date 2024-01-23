@@ -19,6 +19,7 @@ public class GameFrame extends JPanel{
     private int pauseDisplay = 0;
     private int inventoryDisplay = 0;
     private boolean win = false;
+    private boolean bossfight = false;
 
     /**
      * Refreshes window to now initialize and display the game with any necessary objects
@@ -52,7 +53,7 @@ public class GameFrame extends JPanel{
         @Override
         public void actionPerformed(ActionEvent e) {
             switch (Main.gameState) {
-                case PLAY, BOSSFIGHT -> {
+                case PLAY -> {
                     p1.getTile();
                     if (pauseDisplay == 1) {
                         Main.window.remove(pauseScreen);
@@ -94,7 +95,6 @@ public class GameFrame extends JPanel{
                     if (Main.input.interact) {
                         p1.cur_action = GameObject.Action.INTERACT;
                         p1.interact();
-                        curMap = 1;
                     }
 
                     if (curMap == 0) {
@@ -112,9 +112,11 @@ public class GameFrame extends JPanel{
                         for (int i = 0; i < sub_game_objects.size(); i++) {
                             GameObject obj = sub_game_objects.get(i);
                             obj.doTick();
-                            if (obj.getObjectID().contains("boss") && obj.died()) {
+                            if (obj.died()) {
+                                if(obj.object_type == 1 && obj.getObjectID().contains("boss")) {
+                                    win = true;
+                                }
                                 sub_game_objects.remove(obj);
-                                win = true;
                                 i--;
                             }
                         }
@@ -122,15 +124,15 @@ public class GameFrame extends JPanel{
                     if (p1.died()) {
                         game_over = true;
                     }
-                    if(p1.getLevel() == 7 && Main.gameState == Main.GameState.PLAY){
-                        Main.gameState = Main.GameState.BOSSFIGHT;
+                    if(p1.getLevel() == 1 && !bossfight){
+                       bossfight = true;
                         try{
                             Scanner s = new Scanner(new File("data/objectData/boss.csv"));
                             String[] temp = s.nextLine().split(",");
-                            addObject(temp, 1);
+                            p1.xPos = 300;
+                            p1.yPos = 300;
                             curMap = 1;
-                            p1.xPos = 50;
-                            p1.yPos = 50;
+                            addObject(temp, 1);
                         } catch (FileNotFoundException f){
                             System.out.println("welp");
                         }

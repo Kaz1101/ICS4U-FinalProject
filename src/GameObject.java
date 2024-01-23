@@ -178,6 +178,9 @@ public class GameObject extends JComponent {
                 } else {
                     ms = move_spd * ((r.nextDouble(40) + 20) / 100);
                 }
+                if(object_id.contains("boss")){
+                    ms = move_spd;
+                }
                 break;
             case 2:
                 type = ObjectType.NPC;
@@ -808,6 +811,7 @@ public class GameObject extends JComponent {
                     break;
 
             }
+            Main.bgm.playSFX(0);
         }
     }
 

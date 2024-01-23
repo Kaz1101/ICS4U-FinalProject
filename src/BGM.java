@@ -13,6 +13,7 @@ public class BGM {
         bgm[0] = new File("data/bgm/Wii Sports.wav");
         bgm[1] = new File("data/bgm/Sunshine Seaside.wav");
         bgm[2] = new File("data/bgm/Pokemon Center.wav");
+        bgm[3] = new File("data/bgm/nomico_-_Bad_Apple.mp3");
 
         sfx[0] = new File("data/bgm/energyAtk.wav");
         sfx[1] = new File("data/bgm/atkContact.wav");

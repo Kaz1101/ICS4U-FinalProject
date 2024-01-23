@@ -152,10 +152,16 @@ public class Setup extends LoadedSprites {
             load("data/assets/booperdooper_idleR.png", "npc2_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "npc2_RIGHT_MOV", 58, 86);
 
-            load("data/assets/Hongcha.png", "boss_UP_MOVE", 58, 86);
-            load("data/assets/Hongcha.png", "boss_DOWN_MOVE", 58, 86);
-            load("data/assets/Hongcha.png", "boss_LEFT_MOVE", 58, 86);
-            load("data/assets/Hongcha.png", "boss_RIGHT_MOVE", 58, 86);
+            load("data/assets/boss.gif", "boss_UP_MOV", 58, 86);
+            load("data/assets/boss.gif", "boss_DOWN_MOV", 58, 86);
+            load("data/assets/boss.gif", "boss_LEFT_MOV", 58, 86);
+            load("data/assets/boss.gif", "boss_RIGHT_MOV", 58, 86);
+            load("data/assets/boss_atk.gif", "boss_attack", 100, 100);
+
+
+
+
+
 
             load("data/assets/house1.png", "house1", 200, 200);
             load("data/assets/badpotion.png", "potion", 100,100);
