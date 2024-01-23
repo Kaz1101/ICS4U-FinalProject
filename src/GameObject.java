@@ -14,6 +14,7 @@ public class GameObject extends JComponent {
     private static ArrayList<GameObject> enemies = new ArrayList<>(30);
     //    private static ArrayList<GameObject> interactables = new ArrayList<>(30);
     private static ArrayList<GameObject> npcs = new ArrayList<>(5); //testing testing! may become object or that could be another arraylist
+    private static ArrayList<GameObject> worldObj = new ArrayList<>(15); //testing testing! may become object or that could be another arraylist
     private static int window_width, window_length;
     private  Direction cur_direction = Direction.UP; //characters spawn looking up
     public Action cur_action = Action.IDLE;
@@ -45,6 +46,8 @@ public class GameObject extends JComponent {
     private int damage_type; // -1 = enemy's, 1 = player's
     private long cur_cd, cur_atkcd, last_atkcd; //current cd countdown
     private long cd; //fixed value for this character's ability cd time
+    private int enemyCap = 5;
+    private int enemyCount = 0;
     private String ability_name; //we might not need this (update. we need this to read animation)
     private int ability_range; //range for ability
     public int object_type; //0 = player, 1 = enemy, 2 = npc, 3 = static object, 4 = attack
@@ -60,11 +63,12 @@ public class GameObject extends JComponent {
     private int counter = 0;
     private static Random r = new Random();
     private Rectangle hitbox = new Rectangle(0, 0, 0, 0);
-    private double cur_xp = 0;
-    private double[] xps = {0, 100, 500, 1200, 2000, 2800, 3600, 4500, 20000000}; //havent finalized xp amount and gain
-    private double next_xp = xps[1];
+    private double cur_xp;
+    private double[] xps = {100, 500, 1200, 2000, 2800, 3600, 4500, 20000000}; //havent finalized xp amount and gain
+    private double next_xp = xps[0];
     private int level = 1;
     private double dmg_boost = 1; //multiplier
+    private boolean speed_lock = true;
 
 
     /**
@@ -94,6 +98,11 @@ public class GameObject extends JComponent {
                 yScale = Integer.parseInt(temp[15]);
                 interactable = Boolean.parseBoolean(temp[16]);
                 mapLevel = Integer.parseInt(temp[17]);
+                if (object_type == 0) {
+                    cur_xp = Double.parseDouble(temp[18]);
+                    enemyCount = Integer.parseInt(temp[19]);
+                }
+
                 hitbox = new Rectangle((int) xPos, (int) yPos, xScale, yScale);
 //                if (Boolean.parseBoolean(temp[16])) {
 //                    interactables.add(this);
@@ -122,6 +131,7 @@ public class GameObject extends JComponent {
                 xScale = Integer.parseInt(temp[4]);
                 yScale = Integer.parseInt(temp[5]);
                 interactable = Boolean.parseBoolean(temp[6]);
+                if (object_id.equals("house1")) hitbox = new Rectangle((int) xPos + 50, (int) yPos - 50, xScale, yScale);
 //                if (Boolean.parseBoolean(temp[6])) {
 //                    interactables.add(this);
 //                }
@@ -157,10 +167,16 @@ public class GameObject extends JComponent {
                 pathfinding = true;
 
                 enemies.add(this);
+
+                if (this.characterCollision()){
+                    xPos += 150;
+                    yPos -= 150;
+                }
+
                 if(atk_type == 0){
                     ms = 0;
                 } else {
-                    ms = move_spd * 0.75;
+                    ms = move_spd * ((r.nextDouble(40) + 20) / 100);
                 }
                 break;
             case 2:
@@ -177,11 +193,7 @@ public class GameObject extends JComponent {
                 if (npcType == 1) cur_direction = Direction.LEFT;
                 break;
             case 3:
-                if(object_id.equals("door_in")) {
-                    type = ObjectType.DOOR_IN;
-                } if(object_id.equals("door_out")) {
-                    type = ObjectType.DOOR_OUT;
-                }
+                worldObj.add(this);
                 break;
         }
     }
@@ -244,11 +256,15 @@ public class GameObject extends JComponent {
                 refreshCD();
                 refreshXP();
                 //useAbility();
+//                System.out.println(enemyCount);
                 if (speed) spdBoost();
                 die();
                 break;
             case 1:
-                if (pathfinding) searchPath((int)players.get(0).yPos / 100, (int)players.get(0).xPos / 100);
+                GameObject player = players.get(0);
+                if (pathfinding && getDistance(this, player) < 750) {
+                    searchPath((int)(player.yPos + player.yScale / 2) / 100, (int)(player.xPos + player.xScale / 2) / 100);
+                }
                 attack();
                 die();
                 break;
@@ -259,7 +275,7 @@ public class GameObject extends JComponent {
                         break;
                     case 1:
                         cur_action = Action.MOV;
-                        lrMove(ms);
+                        lrMove();
                         break;
                     case 2:
                         randomMove();
@@ -296,9 +312,12 @@ public class GameObject extends JComponent {
     private void levelUp(){
         level += 1;
         dmg_boost += 0.1;
-        max_hp += 70;
-        cur_hp += 70;
+        max_hp += 20;
+        cur_hp += 20;
         next_xp = xps[level];
+        if(level == 7){
+            speed_lock = false;
+        }
     }
 
 
@@ -325,6 +344,7 @@ public class GameObject extends JComponent {
     private void kill(GameObject o){
         o.cur_hp -= max_hp;
         o.die();
+        Main.bgm.playSFX(1);
     }
 
     /**
@@ -360,10 +380,9 @@ public class GameObject extends JComponent {
 
     /**
      * Basic code that makes npcs move back and forth
-     * @param spd the npc's speed (quarter of player speed)
      * @author Luka
      */
-    private void lrMove(double spd){
+    private void lrMove(){
             if (cur_direction == Direction.LEFT) {
                 if (xPos >= originX - 400) {
                     moveLeft();
@@ -535,6 +554,9 @@ public class GameObject extends JComponent {
     private void die() {
         if(cur_hp <= 0){
             is_dead = true;
+            if (object_type == 1){
+                players.get(0).enemyCount--;
+            }
         }
     }
 
@@ -559,6 +581,11 @@ public class GameObject extends JComponent {
                 return true;
             }
         }
+        for(GameObject obj : worldObj){
+            if(obj != this && touches(obj) && GameFrame.curMap == 0){
+                return true;
+            }
+        }
         return false;
     }
 
@@ -579,6 +606,9 @@ public class GameObject extends JComponent {
                         yPos -= ms;
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
+                        if (object_type == 0){
+                            Main.bgm.playSFX(2);
+                        }
                     }
                     break;
                 case 4:
@@ -606,6 +636,9 @@ public class GameObject extends JComponent {
                         yPos += ms;
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
+                        if (object_type == 0){
+                            Main.bgm.playSFX(2);
+                        }
                     }
                     break;
                 case 4:
@@ -631,8 +664,12 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) (xPos - ms), (int) (yPos));
                     if (!characterCollision()) {
                         xPos -= ms;
+
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
+                        if (object_type == 0){
+                            Main.bgm.playSFX(2);
+                        }
                     }
                     break;
                 case 4:
@@ -657,8 +694,12 @@ public class GameObject extends JComponent {
                     hitbox.setLocation((int) (xPos + ms), (int) yPos);
                     if (!characterCollision()) {
                         xPos += ms;
+
                     } else {
                         hitbox.setLocation((int) xPos, (int) yPos);
+                        if (object_type == 0){
+                            Main.bgm.playSFX(2);
+                        }
                     }
                     break;
                 case 4:
@@ -684,26 +725,27 @@ public class GameObject extends JComponent {
             switch (dir) {
                 case "U":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "u");
-                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "D":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "d");
-                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "L":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "l");
-                    last_atkcd = System.currentTimeMillis();
                     break;
                 case "R":
                     GameFrame.addObject(ad, 1, atk_type, object_id, xPos, yPos, "r");
-                    last_atkcd = System.currentTimeMillis();
                     break;
+            }
+            if(!speed_lock){
+                last_atkcd = cur_atkcd;
+            } else {
+                last_atkcd = System.currentTimeMillis();
             }
             Main.bgm.playSFX(0);
         }
-        last_atkcd = cur_atkcd;
-        System.out.println(cur_atkcd);
-        System.out.println(last_atkcd);
+//        last_atkcd = cur_atkcd;
+//        System.out.println(cur_atkcd);
+//        System.out.println(last_atkcd);
     }
 
     /**
@@ -719,39 +761,47 @@ public class GameObject extends JComponent {
                     switch (cur_direction) {
                         case UP:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "u");
-                            last_atkcd = System.currentTimeMillis();
                             break;
                         case DOWN:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "d");
-                            last_atkcd = System.currentTimeMillis();
                             break;
                         case LEFT:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "l");
-                            last_atkcd = System.currentTimeMillis();
                             break;
                         case RIGHT:
                             GameFrame.addObject(atk_dmg, -1, atk_type, object_id, xPos, yPos, "r");
-                            last_atkcd = System.currentTimeMillis();
                             break;
                     }
+                    if(!speed_lock){
+                        last_atkcd = cur_atkcd;
+                    } else {
+                        last_atkcd = System.currentTimeMillis();
+                    }
+                    Main.bgm.playSFX(0);
                     break;
                 case 0:
+                    if (players.get(0).enemyCount < players.get(0).enemyCap){
                     Scanner s = null;
                     try {
-                        int idk = (int) (r.nextDouble() * 2) + 1;
-                        s = new Scanner(new File("data/objectData/enemyTest" + idk + ".csv"));
+//                        int spawnerNum = Integer.parseInt(object_id.replaceAll("\\D", ""));
+                        int idk = (int) (r.nextDouble(7)) + 1;
+//                        if (spawnerNum == 2) idk = r.nextInt(7) + 1;
+                        s = new Scanner(new File("data/objectData/enemy" + idk + ".csv"));
                     } catch (FileNotFoundException e) {
-                        throw new RuntimeException(e);
+                        System.out.println("no enemy for you :D");
+                        //                        throw new RuntimeException(e);
                     }
 
                     String[] data = s.nextLine().split(",");
                     s.close();
-                    GameFrame.addObject(data, 0);
-                    last_atkcd = System.currentTimeMillis();
+
+                        GameFrame.addObject(data, GameFrame.curMap);
+                        players.get(0).enemyCount++;
+                        last_atkcd = System.currentTimeMillis();
+                    }
                     break;
 
             }
-            Main.bgm.playSFX(0);
         }
     }
 
@@ -765,7 +815,7 @@ public class GameObject extends JComponent {
         switch(atk_type){
             case -1: atk_range = 50; break;
             case 1: atk_range = 500; break;
-            case 0: atk_range = 2000; break;
+            case 0: atk_range = 800; break;
         }
         for(GameObject player : players) {
             return getRange(atk_range);
@@ -841,7 +891,8 @@ public class GameObject extends JComponent {
      * @author Graham, edited by Luka
      */
     private void doInteract() {
-        switch (object_id) {
+        String obj = object_id.replaceAll("\\d", "");
+        switch (obj) {
             case "door_in":
                 GameFrame.curMap = 1;
                 Main.bgm.playSFX(4);
@@ -922,10 +973,15 @@ public class GameObject extends JComponent {
         if (inventory.getCurItemIDX() < inventory.inventorySpace.size()) {
             GameObject obj = inventory.getCurObj();
             if (canUseItem) {
-                switch (obj.object_id) {
+                String object = obj.object_id.replaceAll("\\d", "");
+                switch (object) {
                     case "potion" -> {
                         Main.bgm.playSFX(5);
-                        cur_hp += 20;
+                        if (cur_hp < max_hp - 20){
+                            cur_hp += 20;
+                        } else {
+                            cur_hp += max_hp - cur_hp;
+                        }
                         canUseItem = false;
                         inventory.inventorySpace.remove(obj);
                     }
@@ -969,7 +1025,7 @@ public class GameObject extends JComponent {
             x = (int) (xPos + xScale) / 100;
             y = (int) yPos / 100;
         }
-//        System.out.println("[" + x + "," + y + "]");
+        System.out.println("[" + y + "," + x + "]");
         return Setup.textureData[GameFrame.curMap][y][x];
         //should create a tile collision checker so we dont have to manually input which tiles are solid
     }
@@ -1015,9 +1071,9 @@ public class GameObject extends JComponent {
     public void draw(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(object_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
-            case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
+            case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"") + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null);break;
             case 3: gr.drawImage(LoadedSprites.pullTexture(object_id), drawX, drawY, xScale, yScale, null); break;
-            case 4: gr.drawImage(LoadedSprites.pullTexture(object_id + "_attack"), drawX, drawY, xScale, yScale, null); break;
+            case 4: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"") + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
     }
 
@@ -1035,8 +1091,8 @@ public class GameObject extends JComponent {
         double paintX = xPos - playerX + playerScrX;
         double paintY = yPos - playerY + playerScrY;
 
-        if (xPos - 200 < playerX + playerScrX && xPos + 200 > playerX - playerScrX
-                && yPos - 200 < playerY + playerScrY && yPos + 200 > playerY - playerScrY) {
+        if (xPos - 400 < playerX + playerScrX && xPos + 400 > playerX - playerScrX
+                && yPos - 400 < playerY + playerScrY && yPos + 400 > playerY - playerScrY) {
             draw(gr, (int) paintX, (int) paintY); // for things like doors, maybe make it so their collisioin changes from true to false when block ahead of player is the door
 
         }
@@ -1049,25 +1105,25 @@ public class GameObject extends JComponent {
      */
     public void drawOverlay(Graphics2D gr){
         gr.setColor(Color.white);
-        gr.fillRect(20, Main.y - 200,400, 170);
+        gr.fillRect(20, Main.y - 180,400, 170);
         gr.setColor(Color.black);
-        gr.fillRect(25, Main.y - 195,390, 160);
+        gr.fillRect(25, Main.y - 175,390, 160);
         gr.setFont(new Font("Calibri Bold", Font.PLAIN, 26));
         gr.setColor(Color.white);
-        gr.drawString("HP", 50, Main.y - 100);
-        gr.drawString("XP", 50, Main.y - 55);
-        gr.drawString("LEVEL == " + level, 50, Main.y - 145);
+        gr.drawString("HP", 50, Main.y - 90);
+        gr.drawString("XP", 50, Main.y - 45);
+        gr.drawString("LEVEL == " + level, 50, Main.y - 135);
         gr.setColor(Color.gray);
-        gr.fillRect(100, Main.y - 120, 200, 25);
-        gr.fillRect(100, Main.y - 75, 200, 25);
+        gr.fillRect(100, Main.y - 110, 200, 25);
+        gr.fillRect(100, Main.y - 65, 200, 25);
         gr.setColor(Color.blue);
-        gr.fillRect(100, Main.y - 75, (int) (cur_xp / next_xp * 200), 25);
+        gr.fillRect(100, Main.y - 65, (int) (cur_xp / next_xp * 200), 25);
         gr.setColor(Color.red);
-        gr.fillRect(100, Main.y - 120, (int) (cur_hp / max_hp * 200), 25);
+        gr.fillRect(100, Main.y - 110, (int) (cur_hp / max_hp * 200), 25);
         gr.setColor(Color.white);
-        gr.drawString(cur_xp + "/" + next_xp, 110, Main.y - 55);
-        gr.drawString(cur_hp + "/" + max_hp, 110, Main.y - 100);
-        System.out.println(cur_hp);
+        gr.drawString(cur_xp + "/" + next_xp, 110, Main.y - 45);
+        gr.drawString(cur_hp + "/" + max_hp, 110, Main.y - 90);
+//        System.out.println(cur_hp);
 
 
     }
@@ -1085,7 +1141,8 @@ public class GameObject extends JComponent {
                 return new String[]{Integer.toString(object_type), Double.toString(max_hp), Double.toString(cur_hp),
                         Integer.toString(atk_dmg), Integer.toString(atk_spd), Integer.toString(atk_type), Double.toString(ap),
                         Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), object_id,
-                        Double.toString(xPos), Double.toString(yPos), Integer.toString(xScale), Integer.toString(yScale), Boolean.toString(interactable), Integer.toString(GameFrame.curMap)};
+                        Double.toString(xPos), Double.toString(yPos), Integer.toString(xScale), Integer.toString(yScale), Boolean.toString(interactable),
+                        Integer.toString(GameFrame.curMap), Double.toString(cur_xp), Integer.toString(enemyCount)};
             }
             case 1 -> {
                 return new String[]{Integer.toString(object_type), Double.toString(max_hp), Double.toString(cur_hp),
@@ -1118,6 +1175,10 @@ public class GameObject extends JComponent {
         return object_id;
     }
 
+    public int getLevel(){
+        return level;
+    }
+
     //we might need these for setting location of randomly spawned enemies
     public void setxPos(double x){
         xPos = x;
@@ -1135,6 +1196,25 @@ public class GameObject extends JComponent {
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
+    public void changeForm(int stage){
+        switch(stage){
+            case 2 -> {
+                max_hp = (int)(max_hp * 1.5);
+                cur_hp = max_hp;
+                atk_dmg = (int)((double)atk_dmg * 1.5);
+                atk_spd = 1;
+                break;
+            }
+            case 3 -> {
+                max_hp *= 2;
+                cur_hp = max_hp;
+                atk_dmg *= 2;
+                speed_lock = false;
+                break;
+            }
+        }
+    }
+
     /**
      * @return the status of the current object, if it is dead or not, and adds to player's xp bar if an enemy is defeated
      * @author Christina
@@ -1149,6 +1229,11 @@ public class GameObject extends JComponent {
         return is_dead;
     }
 
+    public static void clearArray(){
+        players.removeAll(players);
+        npcs.removeAll(npcs);
+        enemies.removeAll(enemies);
+    }
 
 
 

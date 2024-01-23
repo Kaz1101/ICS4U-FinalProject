@@ -52,6 +52,7 @@ public class Inventory {
     }
 
     private String description(String item){
+        item = item.replaceAll("\\d", "");
         switch (item){
             case "potion" -> {
                 return "A small bottle of red liquid that heals 20 HP. Tastes a little sweet.";

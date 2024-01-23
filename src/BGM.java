@@ -5,6 +5,7 @@ import java.io.IOException;
 public class BGM {
     Clip music;
     Clip sound;
+    FloatControl gain;
     File[] bgm = new File[10];
     File[] sfx = new File[10];
 
@@ -20,12 +21,14 @@ public class BGM {
         sfx[4] = new File("data/bgm/door.wav");
         sfx[5] = new File("data/bgm/potion.wav");
         sfx[6] = new File("data/bgm/spdUp.wav");
+        sfx[7] = new File("data/bgm/gameOver.wav");
     }
 
     public void setMusic(int i) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
         AudioInputStream musicbox = AudioSystem.getAudioInputStream(bgm[i]);
         music = AudioSystem.getClip();
         music.open(musicbox);
+         gain = (FloatControl) music.getControl(FloatControl.Type.MASTER_GAIN);
     }
 
     public void setSfx(int i) throws LineUnavailableException, UnsupportedAudioFileException, IOException {
@@ -55,6 +58,10 @@ public class BGM {
         }
         play();
         loop();
+    }
+
+    public void changeGain(float db){
+        gain.setValue(db);
     }
 
     public void playSFX(int i){

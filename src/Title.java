@@ -21,9 +21,8 @@ public class Title {
         Main.window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Main.window.setTitle("aaaaaaaaa");
         Main.window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        Main.window.setUndecorated(true);
         title[0] = new ImageIcon(LoadedSprites.pullTexture("main_title"));
-        title[1] = new ImageIcon(LoadedSprites.pullTexture("TestDummy"));
+        title[1] = new ImageIcon(LoadedSprites.pullTexture("main_howto"));
         Main.window.add(label);
         titleDisplay(0);
         Main.window.addKeyListener(Main.input);

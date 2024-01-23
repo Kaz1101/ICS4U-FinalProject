@@ -2,8 +2,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class GameFrame extends JPanel{
     GameObject p1;
@@ -15,6 +18,7 @@ public class GameFrame extends JPanel{
     private JLabel pauseScreen = new JLabel(new ImageIcon(LoadedSprites.pullTexture("tempPause")));
     private int pauseDisplay = 0;
     private int inventoryDisplay = 0;
+    private boolean win = false;
 
     /**
      * Refreshes window to now initialize and display the game with any necessary objects
@@ -49,13 +53,14 @@ public class GameFrame extends JPanel{
         public void actionPerformed(ActionEvent e) {
             switch (Main.gameState) {
                 case PLAY, BOSSFIGHT -> {
+                    p1.getTile();
                     if (pauseDisplay == 1) {
                         Main.window.remove(pauseScreen);
                         Main.bgm.play();
                         Main.bgm.loop();
                         pauseDisplay--;
                     } if (inventoryDisplay == 1){
-                        Main.bgm.play();
+                        Main.bgm.changeGain(0.0f);
                         Main.bgm.loop();
                         inventoryDisplay--;
                     }
@@ -89,7 +94,9 @@ public class GameFrame extends JPanel{
                     if (Main.input.interact) {
                         p1.cur_action = GameObject.Action.INTERACT;
                         p1.interact();
+                        curMap = 1;
                     }
+
                     if (curMap == 0) {
                         for (int i = 0; i < game_objects.size(); i++) {
                             GameObject obj = game_objects.get(i);
@@ -105,8 +112,9 @@ public class GameFrame extends JPanel{
                         for (int i = 0; i < sub_game_objects.size(); i++) {
                             GameObject obj = sub_game_objects.get(i);
                             obj.doTick();
-                            if (obj.died()) {
+                            if (obj.getObjectID().contains("boss") && obj.died()) {
                                 sub_game_objects.remove(obj);
+                                win = true;
                                 i--;
                             }
                         }
@@ -114,6 +122,24 @@ public class GameFrame extends JPanel{
                     if (p1.died()) {
                         game_over = true;
                     }
+                    if(p1.getLevel() == 7 && Main.gameState == Main.GameState.PLAY){
+                        Main.gameState = Main.GameState.BOSSFIGHT;
+                        try{
+                            Scanner s = new Scanner(new File("data/objectData/boss.csv"));
+                            String[] temp = s.nextLine().split(",");
+                            addObject(temp, 1);
+                            curMap = 1;
+                            p1.xPos = 50;
+                            p1.yPos = 50;
+                        } catch (FileNotFoundException f){
+                            System.out.println("welp");
+                        }
+                    }
+
+                    if(win){
+                        displayWinScreen();
+                    }
+
                     p1.doTick();
                     repaint();
                 }
@@ -131,7 +157,7 @@ public class GameFrame extends JPanel{
                 }
                 case INVENTORY -> {
                     if (inventoryDisplay == 0){
-                        Main.bgm.stop();
+                        Main.bgm.changeGain(-20.0f);
                         inventoryDisplay++;
                     }
                     if (Main.input.useItem){
@@ -142,9 +168,28 @@ public class GameFrame extends JPanel{
                     }
                     repaint();
                 }
+                case DEAD -> {
+                    if (Main.input.restart){
+                        tick.stop();
+                        game_objects.removeAll(game_objects);
+                        sub_game_objects.removeAll(sub_game_objects);
+                        GameObject.clearArray();
+
+                        Main.window.getContentPane().removeAll();
+                        new Title();
+                    }
+                }
             }
         }
     });
+
+    private void displayWinScreen() {
+        int p = JOptionPane.showConfirmDialog(this, null, "Congratulations on clearing the game! Did you like the game?", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, new ImageIcon("data/assets/title.png"));
+        while(p != JOptionPane.YES_OPTION){
+            p = JOptionPane.showConfirmDialog(this, null, "Congratulations on clearing the game! Did you like the game?", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, new ImageIcon("data/assets/title.png"));
+        }
+        System.exit(0);
+    }
 
 
     /**
@@ -182,23 +227,23 @@ public class GameFrame extends JPanel{
             }
         } //end of map tile painting
 
-        ArrayList<Integer> testX = new ArrayList<Integer>();
-        ArrayList<Integer> testY = new ArrayList<Integer>();
-        //temp debug
-        gr.setColor(new Color(255,0,0,70));
-        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
-            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
-            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
-            double paintX = tileX - p1.xPos + p1.scrX;
-            double paintY = tileY - p1.yPos + p1.scrY;
-
-            if (tileX - 200 < p1.xPos + p1.scrX && tileX + 200 > p1.xPos - p1.scrX
-                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
-                gr.fillRect((int)paintX, (int)paintY, 100, 100);
-                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
-                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
-            }
-        }
+//        ArrayList<Integer> testX = new ArrayList<Integer>();
+//        ArrayList<Integer> testY = new ArrayList<Integer>();
+//        //temp debug
+//        gr.setColor(new Color(255,0,0,70));
+//        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
+//            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
+//            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
+//            double paintX = tileX - p1.xPos + p1.scrX;
+//            double paintY = tileY - p1.yPos + p1.scrY;
+//
+//            if (tileX - 300 < p1.xPos + p1.scrX && tileX + 300 > p1.xPos - p1.scrX
+//                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
+//                gr.fillRect((int)paintX, (int)paintY, 100, 100);
+//                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
+//                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
+//            }
+//        }
 
         if (curMap == 0) {
             for (GameObject o : game_objects) {
@@ -222,6 +267,16 @@ public class GameFrame extends JPanel{
         }
         if (inventoryDisplay == 1){
             p1.inventory.draw(gr);
+        }
+        if (game_over){
+            Main.bgm.stop();
+            Main.bgm.playSFX(7);
+            gr.setColor(new Color(255,0,0,95));
+            gr.fillRect(0,0, Main.x, Main.y);
+            gr.setFont(new Font("Calibri Bold", Font.PLAIN, 64));
+            gr.setColor(Color.black);
+            gr.drawString("GAME OVER", Main.x / 3 + 100, Main.y / 2);
+            Main.gameState = Main.GameState.DEAD;
         }
         gr.dispose();
 
@@ -283,6 +338,11 @@ public class GameFrame extends JPanel{
         tick.stop();
         System.exit(0);
     }
+
+    public void end(){
+
+    }
+
 }
 
 

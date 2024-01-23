@@ -3,7 +3,6 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class Setup extends LoadedSprites {
-    public static int curMap;
     public String textureDir;
     public static String[][][] textureData;
     public static boolean[][][] collisionData;
@@ -103,7 +102,8 @@ public class Setup extends LoadedSprites {
         try {
             //we can try looping through all characters for their name and then load the images
             load("data/TestMovementPics/movinggif.gif", "TestDummy", 500, 500);
-            load("data/assets/title.png", "main_title", Main.x, Main.y);
+            load("data/assets/title2.png", "main_title", Main.x, Main.y);
+            load("data/assets/howto.png", "main_howto", Main.x, Main.y);
             load("data/assets/tempPause.png", "tempPause", 650, 400);
 
             load("data/assets/booperdooper_idleD.png", "booperdooper_UP_IDLE", 58, 86);
@@ -118,12 +118,32 @@ public class Setup extends LoadedSprites {
             load("data/assets/booperdooper_runR.gif", "booperdooper_RIGHT_MOV", 58, 86);
             load("data/assets/booperdooper_attack.png", "booperdooper_attack", 100, 100);
 
-            load("data/assets/booperdooper_runR.gif", "npc1_RIGHT_MOV", 200, 200);
-            load("data/assets/booperdooper_runL.gif", "npc1_LEFT_MOV", 200, 200);
+            load("data/assets/enemyGreen_idle.gif", "enemyGreen_UP_IDLE", 58, 86);
+            load("data/assets/enemyGreen_movD.gif", "enemyGreen_UP_MOV", 58, 86);
+            load("data/assets/enemyGreen_idle.gif", "enemyGreen_LEFT_IDLE", 58, 86);
+            load("data/assets/enemyGreen_movL.gif", "enemyGreen_LEFT_MOV", 58, 86);
+            load("data/assets/enemyGreen_idle.gif", "enemyGreen_DOWN_IDLE", 58, 86);
+            load("data/assets/enemyGreen_movD.gif", "enemyGreen_DOWN_MOV", 58, 86);
+            load("data/assets/enemyGreen_idle.gif", "enemyGreen_RIGHT_IDLE", 58, 86);
+            load("data/assets/enemyGreen_movR.gif", "enemyGreen_RIGHT_MOV", 58, 86);
+            load("data/assets/enemyGreen_atk.png", "enemyGreen_attack", 100, 100);
+
+            load("data/assets/enemyRed_idle.gif", "enemyRed_UP_IDLE", 58, 86);
+            load("data/assets/enemyRed_movD.gif", "enemyRed_UP_MOV", 58, 86);
+            load("data/assets/enemyRed_idle.gif", "enemyRed_LEFT_IDLE", 58, 86);
+            load("data/assets/enemyRed_movL.gif", "enemyRed_LEFT_MOV", 58, 86);
+            load("data/assets/enemyRed_idle.gif", "enemyRed_DOWN_IDLE", 58, 86);
+            load("data/assets/enemyRed_movD.gif", "enemyRed_DOWN_MOV", 58, 86);
+            load("data/assets/enemyRed_idle.gif", "enemyRed_RIGHT_IDLE", 58, 86);
+            load("data/assets/enemyRed_movR.gif", "enemyRed_RIGHT_MOV", 58, 86);
+            load("data/assets/enemyRed_atk.png", "enemyRed_attack", 100, 100);
+
+            load("data/assets/booperdooper_runR.gif", "npc_RIGHT_MOV", 200, 200);
+            load("data/assets/booperdooper_runL.gif", "npc_LEFT_MOV", 200, 200);
             load("data/assets/Dogepro.png", "npcHouse_UP_IDLE", 200,200);
             load("data/assets/Dogepro1.png", "npcHouse_DOWN_IDLE", 200,200);
-            load("data/assets/Hongcha1.png", "npc2_UP_IDLE", 58, 86);
-            load("data/assets/Hongcha.png", "npc2_UP_MOV", 58, 86);
+            load("data/assets/Dogepro.png", "npc2_UP_IDLE", 58, 86);
+            load("data/assets/Dogepro1.png", "npc2_UP_MOV", 58, 86);
             load("data/assets/booperdooper_idleL.png", "npc2_LEFT_IDLE", 58, 86);
             load("data/assets/booperdooper_runL.gif", "npc2_LEFT_MOV", 58, 86);
             load("data/assets/booperdooper_idleD.png", "npc2_DOWN_IDLE", 58, 86);
@@ -131,9 +151,16 @@ public class Setup extends LoadedSprites {
             load("data/assets/booperdooper_idleR.png", "npc2_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "npc2_RIGHT_MOV", 58, 86);
 
+            load("data/assets/Hongcha.png", "boss_UP_MOVE", 58, 86);
+            load("data/assets/Hongcha.png", "boss_DOWN_MOVE", 58, 86);
+            load("data/assets/Hongcha.png", "boss_LEFT_MOVE", 58, 86);
+            load("data/assets/Hongcha.png", "boss_RIGHT_MOVE", 58, 86);
+
             load("data/assets/house1.png", "house1", 200, 200);
-            load("data/assets/sitinglog1.png", "potion", 100,100);
+            load("data/assets/badpotion.png", "potion", 100,100);
+            load("data/assets/badpotion.png", "potion2", 100,100);
             load("data/assets/tree1.png", "spdBoost", 100,100);
+            load("data/assets/transparent.png", "spawner", 30, 30);
 
             loadMapTextures();
         } catch (IOException e) {

@@ -3,7 +3,7 @@ import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
 
-    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, startNew, startOld, options, inventory, useItem, paused, saving;
+    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, startNew, startOld, options, inventory, useItem, paused, saving, restart;
 
     /**
      * Written by Luka (things were added by both Christina and Graham)
@@ -122,6 +122,11 @@ public class KeyInput implements KeyListener {
                     case KeyEvent.VK_ENTER -> {
                         useItem = true;
                     }
+                }
+            }
+            case DEAD -> {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER){
+                    restart = true;
                 }
             }
         }

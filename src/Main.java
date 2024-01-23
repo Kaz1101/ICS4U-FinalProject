@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class Main {
-    public enum GameState {TITLE, HOWTO, OPTIONS, PLAY, PAUSED, INVENTORY, BOSSFIGHT}
+    public enum GameState {TITLE, HOWTO, OPTIONS, PLAY, PAUSED, INVENTORY, BOSSFIGHT, DEAD}
     public static GameState gameState;
     public static JFrame window = new JFrame();
     public static KeyInput input;
@@ -25,6 +25,7 @@ public class Main {
         setup.load();
         bgm = new BGM();
         GameObject.getWindowSize(x, y);
+        Main.window.setUndecorated(true);
         new Title();
     }
 }
