@@ -14,12 +14,12 @@ public class GameFrame extends JPanel{
 
     public static ArrayList<GameObject> game_objects = new ArrayList<>();
     public static ArrayList<GameObject> sub_game_objects = new ArrayList<>();
+    public static boolean stopNext;
     private boolean game_over = false;
+    private boolean win = false;
     private JLabel pauseScreen = new JLabel(new ImageIcon(LoadedSprites.pullTexture("tempPause")));
     private int pauseDisplay = 0;
     private int inventoryDisplay = 0;
-    private boolean win = false;
-    private boolean bossfight = false;
 
     /**
      * Refreshes window to now initialize and display the game with any necessary objects
@@ -53,7 +53,7 @@ public class GameFrame extends JPanel{
         @Override
         public void actionPerformed(ActionEvent e) {
             switch (Main.gameState) {
-                case PLAY -> {
+                case PLAY, BOSSFIGHT -> {
                     p1.getTile();
                     if (pauseDisplay == 1) {
                         Main.window.remove(pauseScreen);
@@ -112,11 +112,13 @@ public class GameFrame extends JPanel{
                         for (int i = 0; i < sub_game_objects.size(); i++) {
                             GameObject obj = sub_game_objects.get(i);
                             obj.doTick();
-                            if (obj.died()) {
-                                if(obj.object_type == 1 && obj.getObjectID().contains("boss")) {
-                                    win = true;
-                                }
+                            if (obj.died() || obj.collected) {
                                 sub_game_objects.remove(obj);
+                                i--;
+                            }
+                            if (obj.getObjectID().contains("boss") && obj.died()) {
+                                sub_game_objects.remove(obj);
+                                win = true;
                                 i--;
                             }
                         }
@@ -124,15 +126,15 @@ public class GameFrame extends JPanel{
                     if (p1.died()) {
                         game_over = true;
                     }
-                    if(p1.getLevel() == 1 && !bossfight){
-                       bossfight = true;
+                    if(p1.getLevel() == 7 && Main.gameState == Main.GameState.PLAY){
+                        Main.gameState = Main.GameState.BOSSFIGHT;
                         try{
                             Scanner s = new Scanner(new File("data/objectData/boss.csv"));
                             String[] temp = s.nextLine().split(",");
-                            p1.xPos = 300;
-                            p1.yPos = 300;
-                            curMap = 1;
                             addObject(temp, 1);
+                            curMap = 1;
+                            p1.xPos = 50;
+                            p1.yPos = 50;
                         } catch (FileNotFoundException f){
                             System.out.println("welp");
                         }
@@ -170,12 +172,21 @@ public class GameFrame extends JPanel{
                     }
                     repaint();
                 }
+                case DIALOGUE -> {
+                    if (Main.input.next && !stopNext){
+                        p1.dialogueSet++;
+                        Main.bgm.playSFX(11);
+                        stopNext = true;
+                        System.out.println("next");
+                    }
+                    repaint();
+                }
                 case DEAD -> {
                     if (Main.input.restart){
                         tick.stop();
                         game_objects.removeAll(game_objects);
                         sub_game_objects.removeAll(sub_game_objects);
-                        GameObject.clearArray();
+                        p1.clearArray();
 
                         Main.window.getContentPane().removeAll();
                         new Title();
@@ -262,6 +273,9 @@ public class GameFrame extends JPanel{
         //player painting
         p1.draw(gr, 0, 0);
 
+        if (Main.gameState == Main.GameState.DIALOGUE){
+            p1.speak(gr);
+        }
         if (pauseDisplay == 1){
             gr.setColor(new Color(30,30,30, 95));
             gr.fillRect(0, 0, Main.x, Main.y);
@@ -269,6 +283,35 @@ public class GameFrame extends JPanel{
         }
         if (inventoryDisplay == 1){
             p1.inventory.draw(gr);
+        }
+        if (Main.input.debug){
+            gr.setColor(Color.white);
+            gr.drawString("tile: " + p1.getTile(), 10,20);
+            gr.drawString("xPos: " + p1.xPos, 10, 60);
+            gr.drawString("yPos: " + p1.yPos, 10, 100);
+            gr.drawString("curMap: " + curMap, 10, 140);
+            gr.drawString("atk: " + p1.atk_dmg, 10, 180);
+            gr.drawString("state: " + Main.gameState, 10, 220);
+            gr.drawString("enemyCount: " + p1.enemyCount, 10, 260);
+            gr.drawString("dialogueSet: " + p1.dialogueSet, 10, 280);
+
+            ArrayList<Integer> testX = new ArrayList<Integer>();
+        ArrayList<Integer> testY = new ArrayList<Integer>();
+        //temp debug
+        gr.setColor(new Color(255,0,0,70));
+        for(int i = 0; i < game_objects.get(1).pathfind.path.size(); i++){
+            int tileX = game_objects.get(1).pathfind.path.get(i).col * 100;//the 100 value will change based on scale, temp - location of tile within whole level map
+            int tileY = game_objects.get(1).pathfind.path.get(i).row * 100;
+            double paintX = tileX - p1.xPos + p1.scrX;
+            double paintY = tileY - p1.yPos + p1.scrY;
+
+            if (tileX - 300 < p1.xPos + p1.scrX && tileX + 300 > p1.xPos - p1.scrX
+                    && tileY - 200 < p1.yPos + p1.scrY && tileY + 200 > p1.yPos - p1.scrY) {
+                gr.fillRect((int)paintX, (int)paintY, 100, 100);
+                testX.add(game_objects.get(1).pathfind.path.get(i).col * 100);
+                testY.add(game_objects.get(1).pathfind.path.get(i).row * 100);
+            }
+       }
         }
         if (game_over){
             Main.bgm.stop();
@@ -278,6 +321,8 @@ public class GameFrame extends JPanel{
             gr.setFont(new Font("Calibri Bold", Font.PLAIN, 64));
             gr.setColor(Color.black);
             gr.drawString("GAME OVER", Main.x / 3 + 100, Main.y / 2);
+            gr.setFont(new Font("Calibri Bold", Font.PLAIN, 32));
+            gr.drawString("Press Enter to Restart", Main.x / 3 + 120, Main.y / 2 + 50);
             Main.gameState = Main.GameState.DEAD;
         }
         gr.dispose();
