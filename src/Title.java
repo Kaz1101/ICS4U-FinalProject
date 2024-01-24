@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.Random;
 
 public class Title {
 
@@ -11,6 +12,9 @@ public class Title {
 
     private ImageIcon[] title = new ImageIcon[4];
     private JLabel label = new JLabel();
+    private Random r = new Random();
+    private int loadTime;
+    private int elapsedTime = 0;
     /**
      * Written by Luka
      * sets up window, displays title screen (or the current lack thereof)
@@ -21,8 +25,11 @@ public class Title {
         Main.window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Main.window.setTitle("aaaaaaaaa");
         Main.window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        title[0] = new ImageIcon(LoadedSprites.pullTexture("main_title"));
+        boolean titleScreen = r.nextBoolean();
+        if (titleScreen) title[0] = new ImageIcon(LoadedSprites.pullTexture("main_title"));
+        else title[0] = new ImageIcon(LoadedSprites.pullTexture("main_titleALT"));
         title[1] = new ImageIcon(LoadedSprites.pullTexture("main_howto"));
+        title[2] = new ImageIcon((LoadedSprites.pullTexture("loadScreen")));
         Main.window.add(label);
         titleDisplay(0);
         Main.window.addKeyListener(Main.input);
@@ -46,22 +53,19 @@ public class Title {
         @Override
         public void actionPerformed(ActionEvent e) {
             //add stuff for selecing options
-            if (Main.input.options){
-                titleDisplay(1);
-                System.out.println("options");
-            } if (!Main.input.options){
-                titleDisplay(0);
+            if (Main.gameState != Main.GameState.PLAY) {
+                if (Main.input.options) {
+                    titleDisplay(1);
+                    System.out.println("options");
+                }
+                if (!Main.input.options) {
+                    titleDisplay(0);
+                }
             }
             //^ should we do joptionpane? or we can draw jbuttons
             if (Main.input.startNew || Main.input.startOld){
-                try {
-                    Main.bgm.stop();
-                    new GameFrame();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-                Main.gameState = Main.GameState.PLAY;
-                tick.stop();
+                Main.bgm.stop();
+                load();
             }
         }
     });
@@ -69,5 +73,24 @@ public class Title {
     private void titleDisplay(int i){
         label.setIcon(title[i]);
 
+    }
+
+    private void load(){
+        if (elapsedTime == 0){
+            Main.bgm.playSFX(8);
+            label.setIcon(title[2]);
+            loadTime = r.nextInt(500 - 200) + 200;
+            Main.gameState = Main.GameState.PLAY;
+
+        }
+        elapsedTime ++;
+        if (elapsedTime >= loadTime){
+            try {
+                tick.stop();
+                new GameFrame();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
