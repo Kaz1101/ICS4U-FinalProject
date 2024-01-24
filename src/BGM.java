@@ -7,13 +7,13 @@ public class BGM {
     Clip sound;
     FloatControl gain;
     File[] bgm = new File[10];
-    File[] sfx = new File[10];
+    File[] sfx = new File[20];
 
     public BGM(){
         bgm[0] = new File("data/bgm/Wii Sports.wav");
         bgm[1] = new File("data/bgm/Sunshine Seaside.wav");
         bgm[2] = new File("data/bgm/Pokemon Center.wav");
-        bgm[3] = new File("data/bgm/nomico_-_Bad_Apple.mp3");
+        bgm[3] = new File("data/bgm/Petalburg Woods.wav");
 
         sfx[0] = new File("data/bgm/energyAtk.wav");
         sfx[1] = new File("data/bgm/atkContact.wav");
@@ -23,13 +23,18 @@ public class BGM {
         sfx[5] = new File("data/bgm/potion.wav");
         sfx[6] = new File("data/bgm/spdUp.wav");
         sfx[7] = new File("data/bgm/gameOver.wav");
+        sfx[8] = new File("data/bgm/start.wav");
+        sfx[9] = new File("data/bgm/pickup.wav");
+        sfx[10] = new File("data/bgm/spawn.wav");
+        sfx[11] = new File("data/bgm/next.wav");
+        sfx[12] = new File("data/bgm/doorUnlock.wav");
     }
 
     public void setMusic(int i) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
         AudioInputStream musicbox = AudioSystem.getAudioInputStream(bgm[i]);
         music = AudioSystem.getClip();
         music.open(musicbox);
-         gain = (FloatControl) music.getControl(FloatControl.Type.MASTER_GAIN);
+        gain = (FloatControl) music.getControl(FloatControl.Type.MASTER_GAIN);
     }
 
     public void setSfx(int i) throws LineUnavailableException, UnsupportedAudioFileException, IOException {
