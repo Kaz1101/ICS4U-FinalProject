@@ -3,7 +3,7 @@ import java.awt.event.KeyListener;
 
 public class KeyInput implements KeyListener {
 
-    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, startNew, startOld, options, inventory, useItem, paused, saving, restart;
+    public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, startNew, startOld, options, inventory, useItem, next, stopNext, paused, saving, restart, debug;
 
     /**
      * Written by Luka (things were added by both Christina and Graham)
@@ -82,6 +82,12 @@ public class KeyInput implements KeyListener {
                         inventory = true;
                         Main.gameState = Main.GameState.INVENTORY;
                         break;
+                    case KeyEvent.VK_F1:
+                        if (!debug) {
+                            debug = true;
+                        } else {
+                            debug = false;
+                        }
                 }
             }
             case PAUSED -> {
@@ -122,6 +128,18 @@ public class KeyInput implements KeyListener {
                     case KeyEvent.VK_ENTER -> {
                         useItem = true;
                     }
+                }
+            }
+            case DIALOGUE -> {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER){
+                    if (!next && !stopNext){
+                        next = true;
+                        stopNext = true;
+                    } else {
+                        next = false;
+
+                    }
+
                 }
             }
             case DEAD -> {
@@ -173,6 +191,15 @@ public class KeyInput implements KeyListener {
                     System.out.println("interact");
                     interact = false;
                     break;
+            }
+        }
+        if (Main.gameState == Main.GameState.DIALOGUE) {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER){
+                next = false;
+                stopNext = false;
+                interact = false;
+                GameFrame.stopNext = false;
+
             }
         }
         if (Main.gameState == Main.GameState.INVENTORY){
