@@ -40,14 +40,14 @@ public class GameObject extends JComponent {
     public int scrY = window_length/2 - yScale/2;
     public double max_hp; //max health points
     public double cur_hp; //current health points
-    private int atk_dmg, atk_spd;
+    protected int atk_dmg, atk_spd;
     private int atk_type; //-1 = melee, 1 = ranged, 0 = spawner
     private double ap;  //ability power that is used as base effectiveness of ability
     private int damage_type; // -1 = enemy's, 1 = player's
     private long cur_cd, cur_atkcd, last_atkcd; //current cd countdown
     private long cd; //fixed value for this character's ability cd time
-    private int enemyCap = 5;
-    private int enemyCount = 0;
+    private int enemyCap = 10;
+    protected int enemyCount = 0;
     private String ability_name; //we might not need this (update. we need this to read animation)
     private int ability_range; //range for ability
     public int object_type; //0 = player, 1 = enemy, 2 = npc, 3 = static object, 4 = attack
@@ -55,20 +55,23 @@ public class GameObject extends JComponent {
     private int mapLevel;
     private int npcType;
     private boolean interactable;
+    private String speakObj;
+    public int dialogueSet = 0;
     public boolean collected;
     public Inventory inventory;
     public boolean canUseItem = true;
+    private boolean caveUnlocked;
     public PathfindAI pathfind = new PathfindAI();
     public boolean pathfinding = false;
     private int counter = 0;
     private static Random r = new Random();
     private Rectangle hitbox = new Rectangle(0, 0, 0, 0);
     private double cur_xp;
-    private double[] xps = {100, 500, 1200, 2000, 2800, 3600, 4500, 20000000}; //havent finalized xp amount and gain
+    private double[] xps = {0, 100, 500, 1200, 2000, 2800, 3600, 4500, 20000000}; //havent finalized xp amount and gain
     private double next_xp = xps[0];
-    private int level = 1;
+    private int level = 0;
     private double dmg_boost = 1; //multiplier
-    private boolean speed_lock = true;
+    private boolean speed_lock = true; //funny things happen you might want to lower your volume if this is false
 
 
     /**
@@ -101,9 +104,10 @@ public class GameObject extends JComponent {
                 if (object_type == 0) {
                     cur_xp = Double.parseDouble(temp[18]);
                     enemyCount = Integer.parseInt(temp[19]);
+                    caveUnlocked = Boolean.parseBoolean(temp[20]);
                 }
 
-                hitbox = new Rectangle((int) xPos, (int) yPos, xScale, yScale);
+                if (atk_type != 0) hitbox = new Rectangle((int) xPos, (int) yPos, xScale, yScale);
 //                if (Boolean.parseBoolean(temp[16])) {
 //                    interactables.add(this);
 //                }
@@ -171,15 +175,16 @@ public class GameObject extends JComponent {
                 if (this.characterCollision()){
                     xPos += 150;
                     yPos -= 150;
+                    if (GameFrame.curMap == 1){
+                        xPos += 100;
+                        yPos += 150;
+                    }
                 }
 
                 if(atk_type == 0){
                     ms = 0;
                 } else {
                     ms = move_spd * ((r.nextDouble(40) + 20) / 100);
-                }
-                if(object_id.contains("boss")){
-                    ms = move_spd;
                 }
                 break;
             case 2:
@@ -265,7 +270,7 @@ public class GameObject extends JComponent {
                 break;
             case 1:
                 GameObject player = players.get(0);
-                if (pathfinding && getDistance(this, player) < 750) {
+                if (pathfinding && getDistance(this, player) < 600) {
                     searchPath((int)(player.yPos + player.yScale / 2) / 100, (int)(player.xPos + player.xScale / 2) / 100);
                 }
                 attack();
@@ -281,7 +286,8 @@ public class GameObject extends JComponent {
                         lrMove();
                         break;
                     case 2:
-                        randomMove();
+                        cur_direction = Direction.RIGHT;
+//                        randomMove();
                         break;
                     case 3:
                         if (pathfinding) searchPath((int)players.get(0).yPos / 100, (int)players.get(0).xPos / 100);
@@ -315,8 +321,10 @@ public class GameObject extends JComponent {
     private void levelUp(){
         level += 1;
         dmg_boost += 0.1;
-        max_hp += 20;
-        cur_hp += 20;
+        if (level != 1) {
+            max_hp += 20;
+            cur_hp += 20;
+        }
         next_xp = xps[level];
         if(level == 7){
             speed_lock = false;
@@ -386,20 +394,20 @@ public class GameObject extends JComponent {
      * @author Luka
      */
     private void lrMove(){
-            if (cur_direction == Direction.LEFT) {
-                if (xPos >= originX - 400) {
-                    moveLeft();
-                } else {
-                    cur_direction = Direction.RIGHT;
-                }
+        if (cur_direction == Direction.LEFT) {
+            if (xPos >= originX - 400) {
+                moveLeft();
+            } else {
+                cur_direction = Direction.RIGHT;
             }
-            if (cur_direction == Direction.RIGHT) {
-                if (xPos <= originX) {
-                    moveRight();
-                } else {
-                    cur_direction = Direction.LEFT;
-                }
+        }
+        if (cur_direction == Direction.RIGHT) {
+            if (xPos <= originX) {
+                moveRight();
+            } else {
+                cur_direction = Direction.LEFT;
             }
+        }
 
     }
 
@@ -661,7 +669,7 @@ public class GameObject extends JComponent {
     public void moveLeft(){
         cur_direction = Direction.LEFT;
         cur_action = Action.MOV;
-        if(xPos - ms > 10 && collisionCheck()){
+        if(xPos - ms > 5 && collisionCheck()){
             switch(object_type) {
                 case 0, 1, 2:
                     hitbox.setLocation((int) (xPos - ms), (int) (yPos));
@@ -790,28 +798,34 @@ public class GameObject extends JComponent {
                     break;
                 case 0:
                     if (players.get(0).enemyCount < players.get(0).enemyCap){
-                    Scanner s = null;
-                    try {
-//                        int spawnerNum = Integer.parseInt(object_id.replaceAll("\\D", ""));
-                        int idk = (int) (r.nextDouble(7)) + 1;
-//                        if (spawnerNum == 2) idk = r.nextInt(7) + 1;
-                        s = new Scanner(new File("data/objectData/enemy" + idk + ".csv"));
-                    } catch (FileNotFoundException e) {
-                        System.out.println("no enemy for you :D");
-                        //                        throw new RuntimeException(e);
-                    }
+                        cur_action = Action.IDLE;
+                        Scanner s = null;
+                        try {
+                            int idk = 0;
+                            int spawnerNum = Integer.parseInt(object_id.replaceAll("\\D", ""));
+                            if (spawnerNum == 1) idk = (int) (r.nextDouble(4)) + 1;
+                            if (spawnerNum == 2) idk = (int) r.nextDouble(7 - 4) + 4;
+                            if (spawnerNum == 3) idk = (int) r.nextDouble(10 - 5) + 5;
+                            if (spawnerNum == 4) idk = (int) r.nextDouble(12 - 11) + 11;
+                            if (spawnerNum == 5) idk = 13;
+                            if (spawnerNum == 6) idk = 14;
+                            s = new Scanner(new File("data/objectData/enemy" + idk + ".csv"));
+                        } catch (FileNotFoundException e) {
+                            System.out.println("no enemy for you :D");
+                            //                        throw new RuntimeException(e);
+                        }
 
-                    String[] data = s.nextLine().split(",");
-                    s.close();
+                        String[] data = s.nextLine().split(",");
+                        s.close();
 
                         GameFrame.addObject(data, GameFrame.curMap);
                         players.get(0).enemyCount++;
+                        Main.bgm.playSFX(10);
                         last_atkcd = System.currentTimeMillis();
                     }
                     break;
 
             }
-            Main.bgm.playSFX(0);
         }
     }
 
@@ -825,7 +839,10 @@ public class GameObject extends JComponent {
         switch(atk_type){
             case -1: atk_range = 50; break;
             case 1: atk_range = 500; break;
-            case 0: atk_range = 800; break;
+            case 0:
+                atk_range = 1000;
+                if (GameFrame.curMap == 1) atk_range = 200;
+                break;
         }
         for(GameObject player : players) {
             return getRange(atk_range);
@@ -913,17 +930,30 @@ public class GameObject extends JComponent {
                 Main.bgm.playSFX(4);
                 Main.bgm.changeTrack(1);
                 break;
-            case "potion":
+            case "cave_in":
+                if (players.get(0).caveUnlocked) {
+                    GameFrame.curMap = 1;
+                    players.get(0).enemyCap = 8;
+                    players.get(0).enemyCount = 0;
+                    Main.bgm.playSFX(4);
+                    Main.bgm.changeTrack(3);
+                }
+                break;
+            case "potion", "spdBoost", "key", "supahpotion", "thatthing":
                 if (!collected) {
                     players.get(0).inventory.inventorySpace.add(this);
                     collected = true;
+                    Main.bgm.playSFX(9);
                 }
                 break;
-            case "spdBoost":
-                Main.bgm.playSFX(6);
-                players.get(0).speed = true;
-                collected = true;
+            case "npc", "npcHouse", "npcEntrance": {
+                Main.gameState = Main.GameState.DIALOGUE;
+                players.get(0).dialogueSet = 0;
+                players.get(0).speakObj = this.object_id;
+                Main.bgm.playSFX(11);
+                System.out.println(players.get(0).speakObj);
                 break;
+            }
             default:
                 System.out.println("poo poo"); //????? LMAO
                 break;
@@ -977,6 +1007,74 @@ public class GameObject extends JComponent {
 
     }
 
+    protected void speak(Graphics2D gr){
+        gr.setColor(Color.white);
+        gr.fillRect(Main.x / 3, 50, Main.x / 3, 180);
+        gr.setColor(Color.black);
+        gr.fillRect(Main.x / 3 + 5, 55,Main.x / 3 - 10, 170);
+        gr.setFont(new Font("Calibri Bold", Font.PLAIN, 26));
+        gr.setColor(Color.white);
+        switch(speakObj){
+            case "npc1" -> {
+                switch (dialogueSet) {
+                    case 0 -> {
+                        gr.drawString("You're new! Unfortunately the bridges are", Main.x / 3 + 50, 100);
+                        gr.drawString("broken so we are stuck on this island...", Main.x / 3 + 50, 130);
+                    }
+                    case 1 -> {
+                        gr.drawString("I was told materials were being gathered", Main.x / 3 + 50, 100);
+                        gr.drawString("but I haven't heard anything about it in ", Main.x / 3 + 50, 130);
+                        gr.drawString("a long time. Something must be up.", Main.x / 3 + 50, 160);
+                    }
+                    case 2 -> {
+                        Main.gameState = Main.GameState.PLAY;
+                        System.out.println("no more talking");
+                    }
+                }
+            }
+            case "npcHouse" -> {
+                switch (dialogueSet) {
+                    case 0 -> {
+                        gr.drawString("woof...woof woof", Main.x / 3 + 50, 100);
+                    }
+                    case 1 -> {
+                        gr.drawString("It appears to say:", Main.x / 3 + 50, 100);
+                        gr.drawString("it's very dangerous out there...", Main.x / 3 + 50, 130);
+                        gr.drawString("please take the potions!", Main.x / 3 + 50, 160);
+                    }
+                    case 2 -> {
+                        Main.gameState = Main.GameState.PLAY;
+                        System.out.println("no more talking");
+                    }
+                }
+            }
+            case "npcEntrance" -> {
+                switch (dialogueSet) {
+                    case 0 -> {
+                        gr.drawString("The materials I collected...", Main.x / 3 + 50, 100);
+                        gr.drawString("all gone!", Main.x / 3 + 50, 130);
+                    }
+                    case 1 -> {
+                        gr.drawString("A monster took it in this cave", Main.x / 3 + 50, 100);
+                        gr.drawString("but its blocked with a magical", Main.x / 3 + 50, 130);
+                        gr.drawString("seal.", Main.x / 3 + 50, 160);
+                    }
+                    case 2 -> {
+                        gr.drawString("If only there was a way to get", Main.x / 3 + 50, 100);
+                        gr.drawString("in...But even then, the seal is", Main.x / 3 + 50, 130);
+                        gr.drawString("so powerful, who knows how long", Main.x / 3 + 50, 160);
+                    }
+                    case 3 -> {
+                        gr.drawString("we will be able to break it for.", Main.x / 3 + 50, 100);
+                    }
+                    case 4 -> {
+                        Main.gameState = Main.GameState.PLAY;
+                        System.out.println("no more talking");
+                    }
+                }
+            }
+        }
+    }
 
 
     public void useItem(){
@@ -995,6 +1093,35 @@ public class GameObject extends JComponent {
                         canUseItem = false;
                         inventory.inventorySpace.remove(obj);
                     }
+                    case "supahpotion" -> {
+                        Main.bgm.playSFX(5);
+                        if (cur_hp < max_hp - 100){
+                            cur_hp += 100;
+                        } else {
+                            cur_hp += max_hp - cur_hp;
+                        }
+                        canUseItem = false;
+                        inventory.inventorySpace.remove(obj);
+                    }
+                    case "thatthing" -> {
+                        Main.bgm.playSFX(5);
+                        max_hp += 30;
+                        cur_hp = max_hp;
+                        canUseItem = false;
+                        inventory.inventorySpace.remove(obj);
+                    }
+                    case "spdBoost" -> {
+                        Main.bgm.playSFX(6);
+                        players.get(0).speed = true;
+                        canUseItem = false;
+                        inventory.inventorySpace.remove(obj);
+                    }
+                    case "key" -> {
+                        Main.bgm.playSFX(12);
+                        caveUnlocked = true;
+                        canUseItem = false;
+                        inventory.inventorySpace.remove(obj);
+                    }
                     case "asdf" -> {
                         System.out.println("yeeee");
                     }
@@ -1007,7 +1134,7 @@ public class GameObject extends JComponent {
         if (counter == 0) ms *= 2;
         counter++;
         System.out.println("spd!");
-        if (counter == 500){
+        if (counter == 5000){
             ms /= 2;
             speed = false;
             counter = 0;
@@ -1035,7 +1162,7 @@ public class GameObject extends JComponent {
             x = (int) (xPos + xScale) / 100;
             y = (int) yPos / 100;
         }
-        System.out.println("[" + y + "," + x + "]");
+//        System.out.println("[" + y + "," + x + "]");
         return Setup.textureData[GameFrame.curMap][y][x];
         //should create a tile collision checker so we dont have to manually input which tiles are solid
     }
@@ -1082,7 +1209,7 @@ public class GameObject extends JComponent {
         switch(object_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
             case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"") + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null);break;
-            case 3: gr.drawImage(LoadedSprites.pullTexture(object_id), drawX, drawY, xScale, yScale, null); break;
+            case 3: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"")), drawX, drawY, xScale, yScale, null); break;
             case 4: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"") + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
     }
@@ -1152,7 +1279,7 @@ public class GameObject extends JComponent {
                         Integer.toString(atk_dmg), Integer.toString(atk_spd), Integer.toString(atk_type), Double.toString(ap),
                         Long.toString(cd), Long.toString(cur_cd), ability_name, Integer.toString(ability_range), object_id,
                         Double.toString(xPos), Double.toString(yPos), Integer.toString(xScale), Integer.toString(yScale), Boolean.toString(interactable),
-                        Integer.toString(GameFrame.curMap), Double.toString(cur_xp), Integer.toString(enemyCount)};
+                        Integer.toString(GameFrame.curMap), Double.toString(cur_xp), Integer.toString(enemyCount), Boolean.toString(caveUnlocked)};
             }
             case 1 -> {
                 return new String[]{Integer.toString(object_type), Double.toString(max_hp), Double.toString(cur_hp),
@@ -1203,6 +1330,7 @@ public class GameObject extends JComponent {
      * @author Graham
      */
     public double getDistance(GameObject x, GameObject y) {
+        System.out.println(Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2)));
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
@@ -1239,10 +1367,12 @@ public class GameObject extends JComponent {
         return is_dead;
     }
 
-    public static void clearArray(){
+    public void clearArray(){
+        inventory.clear();
         players.removeAll(players);
         npcs.removeAll(npcs);
         enemies.removeAll(enemies);
+
     }
 
 
