@@ -8,8 +8,6 @@ public class Inventory {
     private int distY = Main.y - Main.y / 3;
     private int slotStartX = boundsX + 50;
     private int slotStartY = boundsY + 25;
-    private int slotX = slotStartX;
-    private int slotY = slotStartY;
     public static int slotCol = 0;
     public static int slotRow = 0;
     private int selectLength = 100;
@@ -35,7 +33,7 @@ public class Inventory {
         gr.fillRect(selectX, selectY, selectLength, selectLength);
 
         for (int i = 0; i < inventorySpace.size(); i++){
-            gr.drawImage(LoadedSprites.pullTexture(inventorySpace.get(i).getObjectID()), slotX, slotY, null);
+            gr.drawImage(LoadedSprites.pullTexture(inventorySpace.get(i).getObjectID().replaceAll("\\d" ,"")), slotX, slotY, null);
             slotX += 100;
 
             if (slotX == 9 || slotX == 18 || slotX == 27){
@@ -57,8 +55,17 @@ public class Inventory {
             case "potion" -> {
                 return "A small bottle of red liquid that heals 20 HP. Tastes a little sweet.";
             }
-            case "idk" -> {
-                return "aaaaaaaaaaaaaaaaaaaaaaaaaa";
+            case "supahpotion" -> {
+                return "A suspiciously orange looking bottle. Heals 100 HP.";
+            }
+            case "thatthing" -> {
+                return "An extremely rare potion that feels strangely familiar. What does it do?";
+            }
+            case "spdBoost" -> {
+                return "Tastes very bitter. But you do move fast for a while :D";
+            }
+            case "key" -> {
+                return "A key emitting a magical power...what could it possibly open?";
             }
         }
         return "yea i dont think you are supposed to see this";
@@ -72,6 +79,10 @@ public class Inventory {
     protected int getCurItemIDX(){
         curItemIDX = slotCol + slotRow * 4;
         return curItemIDX;
+    }
+
+    protected void clear(){
+        inventorySpace.removeAll(inventorySpace);
     }
 
 
