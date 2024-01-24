@@ -102,8 +102,9 @@ public class Setup extends LoadedSprites {
     public void load(){
         try {
             //we can try looping through all characters for their name and then load the images
-            load("data/TestMovementPics/movinggif.gif", "TestDummy", 500, 500);
+            load("data/TestMovementPics/movinggif.gif", "loadScreen", 500, 500);
             load("data/assets/title2.png", "main_title", Main.x, Main.y);
+            load("data/assets/title3.png", "main_titleALT", Main.x, Main.y);
             load("data/assets/howto.png", "main_howto", Main.x, Main.y);
             load("data/assets/tempPause.png", "tempPause", 650, 400);
 
@@ -112,12 +113,14 @@ public class Setup extends LoadedSprites {
             load("data/assets/Hongcha.png", "booperdooper_UP_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleL.png", "booperdooper_LEFT_IDLE", 58, 86);
             load("data/assets/booperdooper_runL.gif", "booperdooper_LEFT_MOV", 58, 86);
+            load("data/assets/booperdooper_idleL.png", "booperdooper_LEFT_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleD.png", "booperdooper_DOWN_IDLE", 58, 86);
             load("data/assets/booperdooper_runD.gif", "booperdooper_DOWN_MOV", 58, 86);
             load("data/assets/Booperdooper1.png", "booperdooper_DOWN_INTERACT", 58, 86);
             load("data/assets/booperdooper_idleR.png", "booperdooper_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "booperdooper_RIGHT_MOV", 58, 86);
-            load("data/assets/booperdooper_attack.png", "booperdooper_attack", 100, 100);
+            load("data/assets/booperdooper_idleR.png", "booperdooper_RIGHT_INTERACT", 58, 86);
+            load("data/assets/booperdooper_atk.png", "booperdooper_attack", 100, 100);
 
             load("data/assets/enemyGreen_idle.gif", "enemyGreen_UP_IDLE", 58, 86);
             load("data/assets/enemyGreen_movD.gif", "enemyGreen_UP_MOV", 58, 86);
@@ -139,6 +142,24 @@ public class Setup extends LoadedSprites {
             load("data/assets/enemyRed_movR.gif", "enemyRed_RIGHT_MOV", 58, 86);
             load("data/assets/enemyRed_atk.png", "enemyRed_attack", 100, 100);
 
+            load("data/assets/enemyBlue_idle.gif", "enemyBlue_UP_IDLE", 58, 86);
+            load("data/assets/enemyBlue_movD.gif", "enemyBlue_UP_MOV", 58, 86);
+            load("data/assets/enemyBlue_idle.gif", "enemyBlue_LEFT_IDLE", 58, 86);
+            load("data/assets/enemyBlue_movL.gif", "enemyBlue_LEFT_MOV", 58, 86);
+            load("data/assets/enemyBlue_idle.gif", "enemyBlue_DOWN_IDLE", 58, 86);
+            load("data/assets/enemyBlue_movD.gif", "enemyBlue_DOWN_MOV", 58, 86);
+            load("data/assets/enemyBlue_idle.gif", "enemyBlue_RIGHT_IDLE", 58, 86);
+            load("data/assets/enemyBlue_movR.gif", "enemyBlue_RIGHT_MOV", 58, 86);
+            load("data/assets/enemyBlue_atk.png", "enemyBlue_attack", 100, 100);
+
+            load("data/assets/transparent.png", "spawner1_UP_IDLE", 30, 30);
+            load("data/assets/transparent.png", "spawner2_UP_IDLE", 30, 30);
+            load("data/assets/transparent.png", "spawner3_UP_IDLE", 30, 30);
+            load("data/assets/transparent.png", "spawner4_UP_IDLE", 30, 30);
+            load("data/assets/transparent.png", "spawner5_UP_IDLE", 30, 30);
+            load("data/assets/transparent.png", "spawner6_UP_IDLE", 30, 30);
+
+
             load("data/assets/booperdooper_runR.gif", "npc_RIGHT_MOV", 200, 200);
             load("data/assets/booperdooper_runL.gif", "npc_LEFT_MOV", 200, 200);
             load("data/assets/Dogepro.png", "npcHouse_UP_IDLE", 200,200);
@@ -151,23 +172,22 @@ public class Setup extends LoadedSprites {
             load("data/assets/booperdooper_runD.gif", "npc2_DOWN_MOV", 58, 86);
             load("data/assets/booperdooper_idleR.png", "npc2_RIGHT_IDLE", 58, 86);
             load("data/assets/booperdooper_runR.gif", "npc2_RIGHT_MOV", 58, 86);
+            load("data/assets/booperdooper_idleR.png", "npcEntrance_RIGHT_IDLE", 58, 86);
 
-            load("data/assets/boss.gif", "boss_UP_MOV", 58, 86);
-            load("data/assets/boss.gif", "boss_DOWN_MOV", 58, 86);
-            load("data/assets/boss.gif", "boss_LEFT_MOV", 58, 86);
-            load("data/assets/boss.gif", "boss_RIGHT_MOV", 58, 86);
-            load("data/assets/boss_atk.gif", "boss_attack", 100, 100);
+            load("data/assets/Hongcha.png", "boss_UP_MOVE", 58, 86);
+            load("data/assets/Hongcha.png", "boss_DOWN_MOVE", 58, 86);
+            load("data/assets/Hongcha.png", "boss_LEFT_MOVE", 58, 86);
+            load("data/assets/Hongcha.png", "boss_RIGHT_MOVE", 58, 86);
 
-
-
-
-
-
-            load("data/assets/house1.png", "house1", 200, 200);
+            load("data/assets/house1.png", "house", 200, 200);
             load("data/assets/badpotion.png", "potion", 100,100);
-            load("data/assets/badpotion.png", "potion2", 100,100);
-            load("data/assets/tree1.png", "spdBoost", 100,100);
+            load("data/assets/superbadpotion.gif", "supahpotion", 100,100);
+            load("data/assets/thatpotion.png", "thatthing", 100,100);
+            load("data/assets/spdPotion.png", "spdBoost", 100,100);
+            load("data/assets/verybadkey.png", "key", 100,100);
             load("data/assets/transparent.png", "spawner_UP_IDLE", 30, 30);
+            load("data/assets/transparent.png", "door_out", 30, 30);
+            load("data/assets/transparent.png", "cave_in", 30, 30);
 
             loadMapTextures();
         } catch (IOException e) {
