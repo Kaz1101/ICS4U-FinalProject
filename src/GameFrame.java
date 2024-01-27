@@ -20,6 +20,7 @@ public class GameFrame extends JPanel{
     private JLabel pauseScreen = new JLabel(new ImageIcon(LoadedSprites.pullTexture("tempPause")));
     private int pauseDisplay = 0;
     private int inventoryDisplay = 0;
+    private boolean bossfight = false;
 
     /**
      * Refreshes window to now initialize and display the game with any necessary objects
@@ -48,6 +49,7 @@ public class GameFrame extends JPanel{
      * Written by Luka, with things added by Graham and Christina
      * Timer that calls corresponding methods for all player inputs and calls doTick() for every object
      * Runs through every 10 milliseconds and performs appropriate actions
+     * Actions vary based on the state of the game
      */
     Timer tick = new Timer(10, new ActionListener() {
         @Override
@@ -116,7 +118,7 @@ public class GameFrame extends JPanel{
                                 sub_game_objects.remove(obj);
                                 i--;
                             }
-                            if (obj.getObjectID().contains("boss") && obj.died()) {
+                            if (obj.object_type == 1 && obj.getObjectID().equals("boss1") && obj.died()) {
                                 sub_game_objects.remove(obj);
                                 win = true;
                                 i--;
@@ -126,19 +128,22 @@ public class GameFrame extends JPanel{
                     if (p1.died()) {
                         game_over = true;
                     }
-                    if(p1.getLevel() == 7 && Main.gameState == Main.GameState.PLAY){
-                        Main.gameState = Main.GameState.BOSSFIGHT;
-                        try{
-                            Scanner s = new Scanner(new File("data/objectData/boss.csv"));
-                            String[] temp = s.nextLine().split(",");
-                            addObject(temp, 1);
-                            curMap = 1;
-                            p1.xPos = 50;
-                            p1.yPos = 50;
-                        } catch (FileNotFoundException f){
-                            System.out.println("welp");
-                        }
-                    }
+                    /*
+                        Bossfight but it doesnt work yet
+                     */
+//                    if(p1.getLevel() == 1 && Main.gameState == Main.GameState.PLAY){
+//                        Main.gameState = Main.GameState.BOSSFIGHT;
+//                        try{
+//                            Scanner s = new Scanner(new File("data/objectData/boss.csv"));
+//                            String[] temp = s.nextLine().split(",");
+//                            addObject(temp, 1);
+//                            curMap = 1;
+//                            p1.xPos = 400;
+//                            p1.yPos = 400;
+//                        } catch (FileNotFoundException f){
+//                            System.out.println("welp");
+//                        }
+//                    }
 
                     if(win){
                         displayWinScreen();
@@ -196,6 +201,10 @@ public class GameFrame extends JPanel{
         }
     });
 
+
+    /**
+     * Displays the win screen that forces players to like the game :D
+     */
     private void displayWinScreen() {
         int p = JOptionPane.showConfirmDialog(this, null, "Congratulations on clearing the game! Did you like the game?", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, new ImageIcon("data/assets/title.png"));
         while(p != JOptionPane.YES_OPTION){
@@ -373,6 +382,9 @@ public class GameFrame extends JPanel{
         }
     }
 
+    /**
+     * Saves the current state of all objects in the game into a csv file
+     */
     public void save(){
         RWFile.writeData(p1);
         for (GameObject obj : game_objects){

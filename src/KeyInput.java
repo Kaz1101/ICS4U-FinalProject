@@ -6,7 +6,8 @@ public class KeyInput implements KeyListener {
     public boolean up, left, down, right, atk_up, atk_left, atk_right, atk_down, ability, interact, startNew, startOld, options, inventory, useItem, next, stopNext, paused, saving, restart, debug;
 
     /**
-     * Written by Luka (things were added by both Christina and Graham)
+     * Written by Luka, adjusted by Christina and Graham
+     * Sets the boolean of corresponding key input to be true
      * @param e the key event to be processed
      */
     @Override
@@ -153,6 +154,7 @@ public class KeyInput implements KeyListener {
 
     /**
      * Written by Luka (things were added by both Christina and Graham)
+     * Sets the corresponding key input boolean to be false
      * @param e the key event to be processed
      */
     @Override

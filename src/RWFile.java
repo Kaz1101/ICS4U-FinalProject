@@ -19,18 +19,7 @@ public class RWFile {
         return read.readLine().split(",");
     }
 
-	/*
-	What should be called in main class
 
-	GameCharacter booperdooper = new BooperDooper(readInitialFile("booperdooper"));
-
-	String[] enemyType = {"range_enemy", "melee_enemy", "tank_enemy", "support_enemy"};
-	Random r = new Random(23479832);
-	String type = enemyType(r.nextINt());
-	GameCharacter mob1 = new Enemy(readInitialFile(type));
-	GameCharacter alsorangemobbutnumber2 = new Enemy(readInitialFile("rangeenemy"));
-
-	 */
 
     /**Writen by Graham edited by Luka
      * Write the current state of the GameCharacter object into a csv file
@@ -46,6 +35,10 @@ public class RWFile {
         }
     }
 
+    /**
+     * Writes object data of every object within a given inventory to a csv file
+     * @param inv the inventory object to be saved
+     */
     public static void writeInventory(Inventory inv){
         File f = new File("data/saveData/inventory.csv");
         String[] temp = new String[inv.inventorySpace.size()];
@@ -59,7 +52,11 @@ public class RWFile {
         }
     }
 
-
+    /**
+     * Reads data from a saved csv data file
+     * @param name the name of the file to be read
+     * @return a String array containing all information of the object that the file represents
+     */
     public static String[] readData(String name) {
         File f = new File("data/saveData/" + name + ".csv");
 //        ArrayList<String> saveData = new ArrayList<>();
@@ -76,6 +73,9 @@ public class RWFile {
         return null;
     }
 
+    /**
+     * Updates objects in-game to the objectList csv to be saved
+     */
     public static void updateList(){
         File f = new File("data/saveData/objectList.csv");
         ArrayList<String> temp = new ArrayList<>();

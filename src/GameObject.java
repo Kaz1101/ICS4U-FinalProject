@@ -186,6 +186,9 @@ public class GameObject extends JComponent {
                 } else {
                     ms = move_spd * ((r.nextDouble(40) + 20) / 100);
                 }
+                if(object_id.equals("boss1")){
+                    ms = move_spd * 0.9;
+                }
                 break;
             case 2:
                 type = ObjectType.NPC;
@@ -340,7 +343,7 @@ public class GameObject extends JComponent {
         if(getDistance(this, players.get(0)) > scrX * 2 ||! collisionCheck()){
             cur_hp -= max_hp;
             die();
-        } if (object_type == 4 &&  !collisionCheck() || (xPos + xScale + ms >= levelWidth || xPos - ms <= 0 || yPos + yScale + ms >= levelHeight || yPos - ms <= 0)){
+        } if (object_type == 4 &&  !collisionCheck() || (xPos + xScale + ms >= levelWidth || xPos - ms <= 10 || yPos + yScale + ms >= levelHeight || yPos - ms <= 10)){
             cur_hp -= max_hp;
             die();
             Main.bgm.playSFX(1);
@@ -1076,7 +1079,9 @@ public class GameObject extends JComponent {
         }
     }
 
-
+    /**
+     * Uses the item that calls this method
+     */
     public void useItem(){
         if (inventory.getCurItemIDX() < inventory.inventorySpace.size()) {
             GameObject obj = inventory.getCurObj();
@@ -1130,11 +1135,14 @@ public class GameObject extends JComponent {
         }
     }
 
+    /**
+     * Timer for speedboost item that checks for duration
+     */
     private void spdBoost(){
         if (counter == 0) ms *= 2;
         counter++;
         System.out.println("spd!");
-        if (counter == 5000){
+        if (counter == 500){
             ms /= 2;
             speed = false;
             counter = 0;
@@ -1208,7 +1216,13 @@ public class GameObject extends JComponent {
     public void draw(Graphics2D gr, int drawX, int drawY){ //to be draw camera
         switch(object_type) {
             case 0: gr.drawImage(LoadedSprites.pullTexture(object_id + "_" + cur_direction + "_" + cur_action), scrX, scrY, xScale, yScale, new Color(0, 0, 0, 0), null);break;
-            case 1, 2: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"") + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null);break;
+            case 1, 2:
+                gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"") + "_" + cur_direction + "_" + cur_action), drawX, drawY, xScale, yScale, null);
+                gr.setColor(Color.gray);
+                gr.fillRect(drawX, drawY - 10, 65, 10);
+                gr.setColor(Color.red);
+                gr.fillRect(drawX, drawY - 10, (int)(cur_hp / max_hp * 65), 10);
+                break;
             case 3: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"")), drawX, drawY, xScale, yScale, null); break;
             case 4: gr.drawImage(LoadedSprites.pullTexture(object_id.replaceAll("\\d" ,"") + "_attack"), drawX, drawY, xScale, yScale, null); break;
         }
@@ -1260,7 +1274,6 @@ public class GameObject extends JComponent {
         gr.setColor(Color.white);
         gr.drawString(cur_xp + "/" + next_xp, 110, Main.y - 45);
         gr.drawString(cur_hp + "/" + max_hp, 110, Main.y - 90);
-//        System.out.println(cur_hp);
 
 
     }
@@ -1299,6 +1312,9 @@ public class GameObject extends JComponent {
         return null;
     }
 
+    /**
+     * Saves everything in the inventory into a csv file
+     */
     private void saveInventory(){
         for (GameObject obj : inventory.inventorySpace){
             RWFile.writeData(obj);
@@ -1316,14 +1332,6 @@ public class GameObject extends JComponent {
         return level;
     }
 
-    //we might need these for setting location of randomly spawned enemies
-    public void setxPos(double x){
-        xPos = x;
-    }
-
-    public void setyPos(double y){
-        yPos = y;
-    }
 
     /**
      * checking distance between objects for interactions and other things
@@ -1334,24 +1342,24 @@ public class GameObject extends JComponent {
         return Math.sqrt(Math.pow((x.xPos - y.xPos), 2) + Math.pow((x.yPos - y.yPos), 2));
     }
 
-    public void changeForm(int stage){
-        switch(stage){
-            case 2 -> {
-                max_hp = (int)(max_hp * 1.5);
-                cur_hp = max_hp;
-                atk_dmg = (int)((double)atk_dmg * 1.5);
-                atk_spd = 1;
-                break;
-            }
-            case 3 -> {
-                max_hp *= 2;
-                cur_hp = max_hp;
-                atk_dmg *= 2;
-                speed_lock = false;
-                break;
-            }
-        }
-    }
+//    public void changeForm(int stage){
+//        switch(stage){
+//            case 2 -> {
+//                max_hp = (int)(max_hp * 1.5);
+//                cur_hp = max_hp;
+//                atk_dmg = (int)((double)atk_dmg * 1.5);
+//                atk_spd = 1;
+//                break;
+//            }
+//            case 3 -> {
+//                max_hp *= 2;
+//                cur_hp = max_hp;
+//                atk_dmg *= 2;
+//                speed_lock = false;
+//                break;
+//            }
+//        }
+//    }
 
     /**
      * @return the status of the current object, if it is dead or not, and adds to player's xp bar if an enemy is defeated
@@ -1367,6 +1375,9 @@ public class GameObject extends JComponent {
         return is_dead;
     }
 
+    /**
+     * Clears all GameObject array for restart
+     */
     public void clearArray(){
         inventory.clear();
         players.removeAll(players);

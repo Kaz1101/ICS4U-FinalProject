@@ -98,6 +98,7 @@ public class Setup extends LoadedSprites {
 
     /**
      * Loads object sprites - these will change as more sprites are completed
+     * Load files and saves them with given name for future use
      */
     public void load(){
         try {

@@ -18,6 +18,11 @@ public class Inventory {
     public Inventory(){
         inventorySpace = new ArrayList<>(40);
     }
+
+    /**
+     * Draws an inventory grid on screen with all items within the inventory
+     * @param gr
+     */
     public void draw(Graphics2D gr){
         int selectX = slotStartX + slotCol * 100;
         int selectY = slotStartY + slotRow * 100;
@@ -49,6 +54,11 @@ public class Inventory {
         }
     }
 
+    /**
+     * The description that each item has
+     * @param item the item that the player is choosing
+     * @return a String showing the description of the item
+     */
     private String description(String item){
         item = item.replaceAll("\\d", "");
         switch (item){
@@ -71,16 +81,27 @@ public class Inventory {
         return "yea i dont think you are supposed to see this";
     }
 
+    /**
+     * Gets the object that the player is currently choosing
+     * @return the object that the player is choosing
+     */
     protected GameObject getCurObj(){
         curItemIDX = slotCol + slotRow * 4;
         return inventorySpace.get(curItemIDX);
     }
 
+    /**
+     * Gets the index of the item on the current chosen slot
+     * @return the index of the chosen item
+     */
     protected int getCurItemIDX(){
         curItemIDX = slotCol + slotRow * 4;
         return curItemIDX;
     }
 
+    /**
+     * Removes everything from inventory space
+     */
     protected void clear(){
         inventorySpace.removeAll(inventorySpace);
     }

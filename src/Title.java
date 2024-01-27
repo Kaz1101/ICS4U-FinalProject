@@ -52,7 +52,7 @@ public class Title {
     Timer tick = new Timer(10, new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            //add stuff for selecing options
+
             if (Main.gameState != Main.GameState.PLAY) {
                 if (Main.input.options) {
                     titleDisplay(1);
@@ -62,7 +62,7 @@ public class Title {
                     titleDisplay(0);
                 }
             }
-            //^ should we do joptionpane? or we can draw jbuttons
+
             if (Main.input.startNew || Main.input.startOld){
                 Main.bgm.stop();
                 load();
@@ -70,11 +70,19 @@ public class Title {
         }
     });
 
+    /**
+     * displays a random title from title screens we have so far
+     * @param i a random integer representing the index of the title screen to be displayed
+     */
     private void titleDisplay(int i){
         label.setIcon(title[i]);
 
     }
 
+    /**
+     * A random loading screen that makes players feel like they are waiting for game to load
+     * generates random integer to randomize wait time
+     */
     private void load(){
         if (elapsedTime == 0){
             Main.bgm.playSFX(8);
